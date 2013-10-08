@@ -1,0 +1,132 @@
+<?php
+
+Class ExtraParamsDefaultVideo extends FFMpeg\Format\Video\DefaultVideo {
+
+	private $extra_params = array();
+
+    public function getExtraParams() {
+        return $this->extra_params;
+    }
+	
+	public function setExtraParams($value) {
+		$this->extra_params = $value;
+	}
+	
+    public function getAvailableAudioCodecs() {
+        return array();
+    }
+
+    public function getAvailableVideoCodecs() {
+        return array();
+    }
+	
+	public function supportBFrames() {
+        return false;
+    }
+
+}
+
+
+Class X264Baseline extends FFMpeg\Format\Video\X264 {
+
+    public function getExtraParams() {
+        return array("-profile:v", "baseline", "-f", "mp4");
+    }	
+	
+}
+
+
+Class WatermarkFilter implements FFMpeg\Filters\Video\VideoFilterInterface {
+	
+    private $priority;
+	
+	private $filename;
+	
+	private $scale_of_video;
+	
+	private $positionx;
+	
+	private $positiony;
+
+    public function __construct($filename, $scale_of_video, $positionx, $positiony, $priority = 0) {
+        $this->priority = $priority;
+		$this->filename = $filename;
+        $this->scale_of_video = $scale_of_video;
+		$this->positionx = $positionx;
+		$this->positiony = $positiony;
+    }
+
+    public function getPriority() {
+        return $this->priority;
+    }
+
+    public function apply(FFMpeg\Media\Video $video, FFMpeg\Format\VideoInterface $format)
+    {
+        $originalWidth = $originalHeight = null;
+
+        foreach ($video->getStreams() as $stream) {
+            if ($stream->isVideo()) {
+                if ($stream->has('width')) {
+                    $originalWidth = $stream->get('width');
+                }
+                if ($stream->has('height')) {
+                    $originalHeight = $stream->get('height');
+                }
+            }
+        }
+		
+		$image = getimagesize($this->filename);
+		$image_width = $image[0];
+		$image_height = $image[1];
+		
+		$scale_width = $image_width;
+		$scale_height = $image_height;
+		
+		$max_width = floor($originalWidth * $this->scale_of_video);
+		$max_height = floor($originalHeight * $this->scale_of_video);
+		
+		if ($image_width > $max_width || $image_height > $max_height) {
+			if ($image_width * $max_height > $image_height * $max_width) {
+				$scale_width = $max_width;
+				$scale_height = round($image_height * $max_width / $image_width);
+			} else {
+				$scale_height = $max_height;
+				$scale_width = round($image_width * $max_height / $image_height);
+			}
+		}
+		
+		$posx = floor($this->positionx * ($originalWidth - $scale_width));
+		$posy = floor($this->positiony * ($originalHeight - $scale_height));
+		
+        $commands = array(
+        	"-vf",
+        	'movie=' . $this->filename . ', scale=' . $scale_width . ":" . $scale_height . ' [wm];[in][wm] overlay=' . $posx . ':' . $posy . ' [out]'
+		);
+
+        return $commands;
+    }	
+}
+
+
+Class DurationFilter implements FFMpeg\Filters\Video\VideoFilterInterface {
+	
+    private $priority;
+	
+	private $duration;
+
+    public function __construct($duration, $priority = 0) {
+        $this->priority = $priority;
+		$this->duration = $duration;
+    }
+
+    public function getPriority() {
+        return $this->priority;
+    }
+
+    public function apply(FFMpeg\Media\Video $video, FFMpeg\Format\VideoInterface $format) {
+    	return array(
+    		"-t",
+    		$this->duration . ""
+		);
+    }	
+}
