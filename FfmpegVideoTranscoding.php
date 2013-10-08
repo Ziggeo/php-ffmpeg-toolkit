@@ -61,7 +61,7 @@ Class FfmpegVideoTranscoding {
 			$ffmpeg = FFMpeg\FFMpeg::create();
 			$video = $ffmpeg->open($source);
 			if (@$options["width"] && @$options["height"])
-				$video->filters()->resize(new FFMpeg\Coordinate\Dimension($options["width"], $options["height"]));
+				$video->filters()->resize(new FFMpeg\Coordinate\Dimension($options["width"], $options["height"]), "inset");
 			$video->filters()->framerate(new FFMpeg\Coordinate\FrameRate(25), 250)->synchronize();
 			if (@$options["watermark"])
 				$video->addFilter(new WatermarkFilter($options["watermark"], 0.25, 0.95, 0.95));
