@@ -6,7 +6,7 @@ The purpose of this library is to provide a high-level easy-to-use interface to 
 
 The two libraries being used are:
 - https://github.com/alchemy-fr/PHP-FFmpeg
-- http://sourceforge.net/projects/ffmpeg-php
+- https://github.com/CodeScaleInc/ffmpeg-php
 
 Although both libraries look similar, they don't perform the same tasks, so we really need both.
 
