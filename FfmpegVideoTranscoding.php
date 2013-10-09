@@ -53,12 +53,13 @@ Class FfmpegVideoTranscoding {
 	 *  - height (optional): New height
 	 *  - bool faststart (optional),
 	 *  - int duration (optional)
+	 *  - bool old_ffmpeg (optional, default false)
 	 * 
 	 */	
 	public static function transcode($source, $options) {
 		$target = @$options["target"] ? $options["target"] : tempnam(sys_get_temp_dir(), "");
 		try {
-			$ffmpeg = FFMpeg\FFMpeg::create();
+			$ffmpeg = @$options["old_ffmpeg"] ? FFMpegOld::create() : FFMpeg\FFMpeg::create();
 			$video = $ffmpeg->open($source);
 			if (@$options["width"] && @$options["height"])
 				$video->filters()->resize(new FFMpeg\Coordinate\Dimension($options["width"], $options["height"]), "inset");
