@@ -34,12 +34,12 @@ Class FFMpegOldDriver extends FFMpeg\Driver\FFMpegDriver {
 		));
 		$command = $this->replace($command, array("-flags", NULL), array("-flags", "+loop+mv4"));
 		$command = $this->replace($command, array("-coder", NULL), array("-coder", "0"));
-		$command = $this->replace($command, array("-refs", NULL), array("-ref", "5"));
+		$command = $this->replace($command, array("-refs", NULL), array("-refs", "5"));
 		$command = $this->replace($command, array("-bf", NULL), array("-bf", "0"));
 
 		$command = $this->replace($command, array("-b:v"), array("-b"));
 
-		$command = $this->replace($command, array("-b:a"), array("-a"));
+		$command = $this->replace($command, array("-b:a"), array("-ab"));
 
 		return parent::command($command, $bypassErrors, $listeners);
     }		
