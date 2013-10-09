@@ -41,6 +41,8 @@ Class FFMpegOldDriver extends FFMpeg\Driver\FFMpegDriver {
 
 		$command = $this->replace($command, array("-b:a"), array("-ab"));
 
+		//echo join(" ", $command);
+
 		return parent::command($command, $bypassErrors, $listeners);
     }		
 	

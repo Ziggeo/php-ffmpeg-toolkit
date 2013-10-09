@@ -5,6 +5,8 @@ require_once(dirname(__FILE__) . "/FfmpegExtensions.php");
 
 Class FfmpegVideoTranscoding {
 	
+	public static $faststart_binary = "qtfaststart";
+	
 	/* Returns target file name
 	 * 
 	 * Options:
@@ -13,7 +15,7 @@ Class FfmpegVideoTranscoding {
 	 */
 	public static function faststart($source, $options = array()) {
 		$target = @$options["target"] ? $options["target"] : tempnam(sys_get_temp_dir(), "");
-		$command = "qt-faststart " . $source . " " . $target;
+		$command = self::$faststart_binary . " " . $source . " " . $target;
 		$result = 0;
 		try { 
 			exec($command, $output, $result);
