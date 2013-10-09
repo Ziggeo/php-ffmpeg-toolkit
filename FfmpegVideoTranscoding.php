@@ -5,7 +5,8 @@ require_once(dirname(__FILE__) . "/FfmpegExtensions.php");
 
 Class FfmpegVideoTranscoding {
 	
-	public static $faststart_binary = "qtfaststart";
+	public static $faststart_binary = "qt-faststart";
+	public static $qtrotate_binary = "qtrotate.py";
 	
 	/* Returns target file name
 	 * 
@@ -55,6 +56,7 @@ Class FfmpegVideoTranscoding {
 	 *  - height (optional): New height
 	 *  - bool faststart (optional),
 	 *  - int duration (optional)
+	 *  - bool rotate (optional, default false, only required for old_ffmpeg),
 	 *  - bool old_ffmpeg (optional, default false)
 	 * 
 	 */	
@@ -62,7 +64,11 @@ Class FfmpegVideoTranscoding {
 		$target = @$options["target"] ? $options["target"] : tempnam(sys_get_temp_dir(), "");
 		try {
 			$ffmpeg = @$options["old_ffmpeg"] ? FFMpegOld::create() : FFMpeg\FFMpeg::create();
+			if (@$options["rotate"] && @$options["old_ffmpeg"])
+				$rotation = self::getRotation($source);
 			$video = $ffmpeg->open($source);
+			if (@$rotation)
+				$video->addFilter(new RotationFilter($rotation));
 			if (@$options["width"] && @$options["height"])
 				$video->filters()->resize(new FFMpeg\Coordinate\Dimension($options["width"], $options["height"]), "inset");
 			$video->filters()->framerate(new FFMpeg\Coordinate\FrameRate(25), 250)->synchronize();
@@ -97,6 +103,19 @@ Class FfmpegVideoTranscoding {
 		} else
 			return $target;
 	}
+
+	public static function getRotation($file) {
+		$command = self::$qtrotate_binary . " " . $file;
+		$result = 0;
+		try { 
+			exec($command, $output, $result);
+			if ($result != 0) 
+				throw new VideoTranscodingException(VideoTranscodingException::QTROTATE_FAILED);
+			return intval($output[0]);
+		} catch (Exception $e) {
+			throw new VideoTranscodingException(VideoTranscodingException::QTROTATE_FAILED, $e->getMessage());
+		}
+	}
 	
 }
 
@@ -124,6 +143,7 @@ Class VideoTranscodingException extends Exception {
 			case self::TRANSCODE_RENAME_FAILED : return "Transcode Rename Failed";
 			case self::TRANSCODE_EXCEPTION : return "Transcode Exception";
 			case self::TRANSCODE_UNKNOWN_TARGET_FORMAT : return "Transcode Unknown Target Format";
+			case self::QTROTATE_FAILED : return "Rotate Exec Failed";
 		}
 	}
 	

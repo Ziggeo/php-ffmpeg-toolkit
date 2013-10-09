@@ -193,3 +193,48 @@ Class DurationFilter implements FFMpeg\Filters\Video\VideoFilterInterface {
 		);
     }	
 }
+
+
+
+Class RotationFilter implements FFMpeg\Filters\Video\VideoFilterInterface {
+	
+    private $priority;
+	
+	private $rotation;
+	
+	private $transpose;
+	private $doubleflip;
+
+    public function __construct($rotation, $priority = 0) {
+        $this->priority = $priority;
+		$this->rotation = $rotation; 
+		$this->transpose = 0;
+		$this->doubleflip = false;
+		if ($this->rotation == 90)
+			$this->transpose = 1;
+		elseif ($this->rotation == 270)
+			$this->transpose = 2;
+		elseif ($this->rotation == 180)
+			$this->doubleflip = true;
+    }
+
+    public function getPriority() {
+        return $this->priority;
+    }
+
+    public function apply(FFMpeg\Media\Video $video, FFMpeg\Format\VideoInterface $format) {
+    	$result = array();
+		if ($this->transpose != 0) {
+			$result[] = "-vf";
+			$result[] = "transpose=" . $this->transpose;
+		}
+		if ($this->doubleflip) {
+			$result[] = "-vf";
+			$result[] = "hflip,vflip";
+		}
+		return $result;
+    }
+	
+	public function getTranspose() {
+	}
+}
