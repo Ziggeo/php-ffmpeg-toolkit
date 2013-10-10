@@ -68,13 +68,14 @@ Class FfmpegVideoTranscoding {
 			if (self::$ffmpeg_binary)
 				$config["ffmpeg.binaries"] = array(self::$ffmpeg_binary);
 			$ffmpeg = @$options["old_ffmpeg"] ? FFMpegOld::create($config) : FFMpeg\FFMpeg::create($config);
-			if (@$options["rotate"] && @$options["old_ffmpeg"])
+			$rotation = 0;
+			if (@$options["rotate"])
 				$rotation = self::getRotation($source);
 			$video = $ffmpeg->open($source);
 			if (@$rotation)
 				$video->addFilter(new RotationFilter($rotation));
 			if (@$options["width"] && @$options["height"])
-				$video->filters()->resize(new FFMpeg\Coordinate\Dimension($options["width"], $options["height"]), "inset");
+				$video->addFilter(new RotationResizeFilter($rotation, new FFMpeg\Coordinate\Dimension($options["width"], $options["height"]), "inset"));
 			$video->filters()->framerate(new FFMpeg\Coordinate\FrameRate(25), 250)->synchronize();
 			if (@$options["watermark"])
 				$video->addFilter(new WatermarkFilter($options["watermark"], 0.25, 0.95, 0.95));

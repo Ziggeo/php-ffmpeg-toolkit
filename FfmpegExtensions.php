@@ -232,9 +232,138 @@ Class RotationFilter implements FFMpeg\Filters\Video\VideoFilterInterface {
 			$result[] = "-vf";
 			$result[] = "hflip,vflip";
 		}
+		$result[] = "-metadata:s:v:0";
+		$result[] = "rotate=0";		
 		return $result;
     }
 	
 	public function getTranspose() {
 	}
+}
+
+
+Class RotationResizeFilter implements FFMpeg\Filters\Video\VideoFilterInterface
+{
+    /** fits to the dimensions, might introduce anamorphosis */
+    const RESIZEMODE_FIT = 'fit';
+    /** resizes the video inside the given dimension, no anamorphosis */
+    const RESIZEMODE_INSET = 'inset';
+    /** resizes the video to fit the dimension width, no anamorphosis */
+    const RESIZEMODE_SCALE_WIDTH = 'width';
+    /** resizes the video to fit the dimension height, no anamorphosis */
+    const RESIZEMODE_SCALE_HEIGHT = 'height';
+
+    /** @var Dimension */
+    private $dimension;
+    /** @var string */
+    private $mode;
+    /** @var Boolean */
+    private $forceStandards;
+    /** @var integer */
+    private $priority;
+
+    public function __construct($rotation, FFMpeg\Coordinate\Dimension $dimension, $mode = "fit", $forceStandards = true, $priority = 0)
+    {
+        $this->dimension = $dimension;
+        $this->mode = $mode;
+        $this->forceStandards = $forceStandards;
+        $this->priority = $priority;
+        $this->rotation = $rotation;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getPriority()
+    {
+        return $this->priority;
+    }
+
+    /**
+     * @return Dimension
+     */
+    public function getDimension()
+    {
+        return $this->dimension;
+    }
+
+    /**
+     * @return string
+     */
+    public function getMode()
+    {
+        return $this->mode;
+    }
+
+    /**
+     * @return Boolean
+     */
+    public function areStandardsForced()
+    {
+        return $this->forceStandards;
+    }
+	
+    public function apply(FFMpeg\Media\Video $video, FFMpeg\Format\VideoInterface $format)
+    {
+        $dimensions = null;
+        $commands = array();
+
+        foreach ($video->getStreams() as $stream) {
+            if ($stream->isVideo()) {
+                try {
+                    $dimensions = $stream->getDimensions();
+                    break;
+                } catch (RuntimeException $e) {
+
+                }
+            }
+        }
+
+        if (null !== $dimensions) {
+            $dimensions = $this->getComputedDimensions($dimensions, $format->getModulus());
+
+            $commands[] = '-s';
+            $commands[] = $dimensions->getWidth() . 'x' . $dimensions->getHeight();
+        }
+
+        return $commands;
+    }
+
+    private function getComputedDimensions(FFMpeg\Coordinate\Dimension $dimension, $modulus)
+    {
+    	if ($this->rotation == 90 || $this->rotation == 270)
+    		$dimension = new FFMpeg\Coordinate\Dimension($dimension->getHeight(), $dimension->getWidth());
+
+        $originalRatio = $dimension->getRatio($this->forceStandards);
+
+        switch ($this->mode) {
+            case "width":
+                $height = $this->dimension->getHeight();
+                $width = $originalRatio->calculateWidth($height, $modulus);
+                break;
+            case "height":
+                $width = $this->dimension->getWidth();
+                $height = $originalRatio->calculateHeight($width, $modulus);
+                break;
+            case "inset":
+                $targetRatio = $this->dimension->getRatio($this->forceStandards);
+
+                if ($targetRatio->getValue() > $originalRatio->getValue()) {
+                    $height = $this->dimension->getHeight();
+                    $width = $originalRatio->calculateWidth($height, $modulus);
+                } else {
+                    $width = $this->dimension->getWidth();
+                    $height = $originalRatio->calculateHeight($width, $modulus);
+                }
+                break;
+            case "fit":
+            default:
+                $width = $this->dimension->getWidth();
+                $height = $this->dimension->getHeight();
+                break;
+        }
+
+        return new FFMpeg\Coordinate\Dimension($width, $height);
+    }
+	
 }
