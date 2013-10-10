@@ -7,6 +7,7 @@ Class FfmpegVideoTranscoding {
 	
 	public static $faststart_binary = "qt-faststart";
 	public static $qtrotate_binary = "qtrotate.py";
+	public static $ffmpeg_binary = NULL;
 	
 	/* Returns target file name
 	 * 
@@ -63,7 +64,10 @@ Class FfmpegVideoTranscoding {
 	public static function transcode($source, $options) {
 		$target = @$options["target"] ? $options["target"] : tempnam(sys_get_temp_dir(), "");
 		try {
-			$ffmpeg = @$options["old_ffmpeg"] ? FFMpegOld::create() : FFMpeg\FFMpeg::create();
+			$config = array();
+			if (self::$ffmpeg_binary)
+				$config["ffmpeg.binaries"] = array(self::$ffmpeg_binary);
+			$ffmpeg = @$options["old_ffmpeg"] ? FFMpegOld::create($config) : FFMpeg\FFMpeg::create($config);
 			if (@$options["rotate"] && @$options["old_ffmpeg"])
 				$rotation = self::getRotation($source);
 			$video = $ffmpeg->open($source);
@@ -128,6 +132,7 @@ Class VideoTranscodingException extends Exception {
 	const TRANSCODE_RENAME_FAILED = 4;
 	const TRANSCODE_EXCEPTION = 5;
 	const TRANSCODE_UNKNOWN_TARGET_FORMAT = 6;
+	const QTROTATE_FAILED = 7;
 	
 	function __construct($message_id, $data = NULL) {
 		$this->message_id = $message_id;
