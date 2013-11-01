@@ -81,7 +81,6 @@ Class FfmpegVideoTranscoding {
 				$video->addFilter(new WatermarkFilter($options["watermark"], 0.25, 0.95, 0.95));
 			if (@$options["duration"])
 				$video->addFilter(new DurationFilter($options["duration"]));
-			$format = new ExtraParamsDefaultVideo();
 			if (@$options["format"]) {
 				if ($options["format"] == "mp4") {
 					$format = new X264Baseline();
@@ -94,6 +93,8 @@ Class FfmpegVideoTranscoding {
 				} else
 					throw new VideoTranscodingException(VideoTranscodingException::TRANSCODE_UNKNOWN_TARGET_FORMAT, $options["format"]);
 			}
+			else
+				$format = new ExtraParamsDefaultVideo();			
 			$video->save($format, $target);
 		} catch (Exception $e) {
 			throw new VideoTranscodingException(VideoTranscodingException::TRANSCODE_EXCEPTION, $e->getMessage());
