@@ -11,6 +11,17 @@ Class FfmpegVideoCodecs {
 		return "unknown";
 	}
 	
+	static function videoTypeByCodecAndFileName($codec, $filename) {
+		$codec = strtolower($codec);
+		if (strpos(strtolower($filename), ".mov") !== FALSE)
+			return "mov";
+		if (strpos($codec, "flv") !== FALSE)
+			return "flv";
+		if (strpos($codec, "h264") !== FALSE)
+			return "mp4";
+		return "unknown";
+	}
+
 	static function videoSubTypeByCodec($codec) {
 		$codec = strtolower($codec);
 		if (strpos($codec, "flv") !== FALSE)

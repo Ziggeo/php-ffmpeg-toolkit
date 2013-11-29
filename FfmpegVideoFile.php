@@ -4,11 +4,13 @@ require_once(dirname(__FILE__) . "/FfmpegVideoCodecs.php");
 
 Class FfmpegVideoFile {
 	
+	private $filename;
 	private $ffmpeg;
 	private $video;
 	private $movie;
 	
 	function __construct($name) {
+		$this->filename = $name;
 		$this->movie = new ffmpeg_movie($name);
 		$this->ffmpeg = FFMpeg\FFMpeg::create();
 		$this->video = $this->ffmpeg->open($name);
@@ -58,8 +60,8 @@ Class FfmpegVideoFile {
 		return $filename;
 	}
 	
-	function getVideoType() {
-		return FfmpegVideoCodecs::videoTypeByCodec($this->getVideoCodec());
+	function getVideoType($filename = NULL) {
+		return FfmpegVideoCodecs::videoTypeByCodecAndFileName($this->getVideoCodec(), @$filename ? $filename : $this->filename);
 	}
 	
 	function getVideoSubType() {
