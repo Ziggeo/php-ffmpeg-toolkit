@@ -69,8 +69,13 @@ Class FfmpegVideoTranscoding {
 				$config["ffmpeg.binaries"] = array(self::$ffmpeg_binary);
 			$ffmpeg = @$options["old_ffmpeg"] ? FFMpegOld::create($config) : FFMpeg\FFMpeg::create($config);
 			$rotation = 0;
-			if (@$options["rotate"])
-				$rotation = self::getRotation($source);
+			if (@$options["rotate"]) {
+				try {
+					$rotation = self::getRotation($source);
+				} catch (VideoTranscodingException $e) {
+					// Ignore it and assume rotation 0
+				}
+			}
 			$video = $ffmpeg->open($source);
 			if (@$rotation)
 				$video->addFilter(new RotationFilter($rotation));
