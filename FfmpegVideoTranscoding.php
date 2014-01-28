@@ -55,6 +55,7 @@ Class FfmpegVideoTranscoding {
 	 *  - string format (optional): Mp4 / Flv
 	 *  - width (optional): New width
 	 *  - height (optional): New height
+	 *  - timeout (optional): In seconds. Default is one day.
 	 *  - bool faststart (optional),
 	 *  - int duration (optional)
 	 *  - bool rotate (optional, default false, only required for old_ffmpeg),
@@ -64,7 +65,9 @@ Class FfmpegVideoTranscoding {
 	public static function transcode($source, $options) {
 		$target = @$options["target"] ? $options["target"] : tempnam(sys_get_temp_dir(), "");
 		try {
-			$config = array();
+			$config = array(
+				"timeout" => isset($options["timeout"]) ? $options["timeout"] : 60 * 60 * 24
+			);
 			if (self::$ffmpeg_binary)
 				$config["ffmpeg.binaries"] = array(self::$ffmpeg_binary);
 			$ffmpeg = @$options["old_ffmpeg"] ? FFMpegOld::create($config) : FFMpeg\FFMpeg::create($config);
@@ -102,7 +105,7 @@ Class FfmpegVideoTranscoding {
 				$format = new ExtraParamsDefaultVideo();			
 			$video->save($format, $target);
 		} catch (Exception $e) {
-			throw new VideoTranscodingException(VideoTranscodingException::TRANSCODE_EXCEPTION, $e->getMessage());
+			throw new VideoTranscodingException(VideoTranscodingException::TRANSCODE_EXCEPTION, (string)$e);
 		}
 		if (@$options["faststart"] && $options["format"] == "mp4")
 			self::faststart($target);
@@ -124,7 +127,7 @@ Class FfmpegVideoTranscoding {
 				throw new VideoTranscodingException(VideoTranscodingException::QTROTATE_FAILED);
 			return intval($output[0]);
 		} catch (Exception $e) {
-			throw new VideoTranscodingException(VideoTranscodingException::QTROTATE_FAILED, $e->getMessage());
+			throw new VideoTranscodingException(VideoTranscodingException::QTROTATE_FAILED, (string)$e);
 		}
 	}
 	
