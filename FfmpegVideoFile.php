@@ -48,14 +48,14 @@ Class FfmpegVideoFile {
 		return tempnam(sys_get_temp_dir(), "");
 	}
 	
-	function saveImageBySecond($filename = NULL, $seconds = 0) {
-		$filename = $filename == NULL ? $this->getTempFileName() . ".png" : $filename;
+	function saveImageBySecond($filename = NULL, $seconds = 0, $extension = "png") {
+		$filename = $filename == NULL ? $this->getTempFileName() . "." . $extension : $filename;
 		$this->video->frame(FFMpeg\Coordinate\TimeCode::fromSeconds($seconds))->save($filename);
 		return $filename;
 	}
 	
-	function saveImageByPercentage($filename = NULL, $percentage = 0) {
-		$filename = $filename == NULL ? $this->getTempFileName() . ".png" : $filename;
+	function saveImageByPercentage($filename = NULL, $percentage = 0, $extension = "png") {
+		$filename = $filename == NULL ? $this->getTempFileName() . "." . $extension : $filename;
 		$this->video->frame(FFMpeg\Coordinate\TimeCode::fromSeconds(floor($percentage * $this->getDuration())))->save($filename);
 		return $filename;
 	}
