@@ -1,6 +1,7 @@
 <?php
 
 require_once(dirname(__FILE__) . "/FfmpegVideoCodecs.php");
+require_once(dirname(__FILE__) . "/FfmpegVideoTranscoding.php");
 
 Class FfmpegVideoFile {
 	
@@ -8,12 +9,23 @@ Class FfmpegVideoFile {
 	private $ffmpeg;
 	private $video;
 	private $movie;
+	private $rotation;
 	
-	function __construct($name) {
+	function __construct($name, $options = array()) {
 		$this->filename = $name;
 		$this->movie = new ffmpeg_movie($name);
 		$this->ffmpeg = FFMpeg\FFMpeg::create();
 		$this->video = $this->ffmpeg->open($name);
+		$this->rotation = 0;
+		if (@$options["rotation"]) {
+			try {
+				$this->rotation = FfmpegVideoTranscoding::getRotation($name);
+			} catch (Exception $e) {}
+		}
+	}
+	
+	function getRotation() {
+		return $this->rotation;
 	}
 	
 	function hasVideo() {
@@ -29,11 +41,11 @@ Class FfmpegVideoFile {
 	}
 	
 	function getWidth() {
-		return $this->movie->getFrameWidth();
+		return $this->rotation % 180 == 0 ? $this->movie->getFrameWidth() : $this->movie->getFrameHeight();
 	}
 
 	function getHeight() {
-		return $this->movie->getFrameHeight();
+		return $this->rotation % 180 == 0 ? $this->movie->getFrameHeight() : $this->movie->getFrameWidth();
 	}
 
 	function getVideoCodec() {

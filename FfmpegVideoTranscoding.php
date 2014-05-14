@@ -83,7 +83,7 @@ Class FfmpegVideoTranscoding {
 			if (@$rotation)
 				$video->addFilter(new RotationFilter($rotation));
 			if (@$options["width"] && @$options["height"])
-				$video->addFilter(new RotationResizeFilter($rotation, new FFMpeg\Coordinate\Dimension($options["width"], $options["height"]), "inset"));
+				$video->addFilter(new RotationResizeFilter($rotation, new FFMpeg\Coordinate\Dimension($options["width"], $options["height"]), @$options["resizefit"] ? $options["resizefit"] : "inset"));
 			$video->filters()->framerate(new FFMpeg\Coordinate\FrameRate(25), 250)->synchronize();
 			if (@$options["watermark"])
 				$video->addFilter(new WatermarkFilter($options["watermark"], 0.25, 0.95, 0.95));
