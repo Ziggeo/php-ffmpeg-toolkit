@@ -66,9 +66,11 @@ Class FfmpegVideoFile {
 		return $filename;
 	}
 	
-	function saveImageByPercentage($filename = NULL, $percentage = 0, $extension = "png") {
+	function saveImageByPercentage($filename = NULL, $percentage = 0, $extension = "png", $safeRevertToZero = FALSE) {
 		$filename = $filename == NULL ? $this->getTempFileName() . "." . $extension : $filename;
 		$this->video->frame(FFMpeg\Coordinate\TimeCode::fromSeconds($percentage * $this->getDuration()))->save($filename);
+		if ($safeRevertToZero && !is_file($filename))
+			$this->video->frame(0)->save($filename);
 		return $filename;
 	}
 	
