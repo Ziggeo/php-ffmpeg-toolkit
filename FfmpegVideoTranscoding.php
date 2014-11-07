@@ -58,7 +58,8 @@ Class FfmpegVideoTranscoding {
 	 *  - timeout (optional): In seconds. Default is one day.
 	 *  - bool faststart (optional),
 	 *  - int duration (optional)
-	 *  - bool rotate (optional, default false, only required for old_ffmpeg),
+	 *  - bool rotate (optional, default false),
+	 *  - int rotate_add (optional)
 	 *  - bool old_ffmpeg (optional, default false)
 	 * 
 	 */	
@@ -71,10 +72,10 @@ Class FfmpegVideoTranscoding {
 			if (self::$ffmpeg_binary)
 				$config["ffmpeg.binaries"] = array(self::$ffmpeg_binary);
 			$ffmpeg = @$options["old_ffmpeg"] ? FFMpegOld::create($config) : FFMpeg\FFMpeg::create($config);
-			$rotation = 0;
+			$rotation = @$options["rotate_add"] ? $options["rotate_add"] : 0;
 			if (@$options["rotate"]) {
 				try {
-					$rotation = self::getRotation($source);
+					$rotation += self::getRotation($source);
 				} catch (VideoTranscodingException $e) {
 					// Ignore it and assume rotation 0
 				}
