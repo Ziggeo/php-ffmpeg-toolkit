@@ -3,6 +3,12 @@
 require_once(dirname(__FILE__) . "/FfmpegVideoCodecs.php");
 require_once(dirname(__FILE__) . "/FfmpegVideoTranscoding.php");
 
+Class NullAudio extends FFMpeg\Format\Audio\DefaultAudio {
+    public function getAvailableAudioCodecs() {
+        return array();
+    }
+}
+
 Class FfmpegVideoFile {
 	
 	private $filename;
@@ -71,6 +77,13 @@ Class FfmpegVideoFile {
 		$this->video->frame(FFMpeg\Coordinate\TimeCode::fromSeconds($percentage * $this->getDuration()))->save($filename);
 		if ($safeRevertToZero && !is_file($filename))
 			$this->video->frame(0)->save($filename);
+		return $filename;
+	}
+	
+	function saveAudio($filename = NULL, $extension = "wav") {
+		$filename = $filename == NULL ? $this->getTempFileName() . "." . $extension : $filename;
+		$audio = new FFMpeg\Media\Audio($this->filename, $this->ffmpeg->getFFMpegDriver(), $this->ffmpeg->getFFProbe());
+		$audio->save(new NullAudio(), $filename);
 		return $filename;
 	}
 	
