@@ -179,6 +179,53 @@ Class RotationFilter implements FFMpeg\Filters\Video\VideoFilterInterface {
 }
 
 
+Class RotationFrameFilter implements FFMpeg\Filters\Frame\FrameFilterInterface {
+	
+    private $priority;
+	
+	private $rotation;
+	
+	private $transpose;
+	private $doubleflip;
+
+    public function __construct($rotation, $priority = 0) {
+        $this->priority = $priority;
+		$this->rotation = $rotation; 
+		$this->transpose = 0;
+		$this->doubleflip = false;
+		if ($this->rotation == 90)
+			$this->transpose = 1;
+		elseif ($this->rotation == 270)
+			$this->transpose = 2;
+		elseif ($this->rotation == 180)
+			$this->doubleflip = true;
+    }
+
+    public function getPriority() {
+        return $this->priority;
+    }
+
+    public function apply(FFMpeg\Media\Frame $frame) {
+    	$result = array();
+		if ($this->transpose != 0) {
+			$result[] = "-vf";
+			$result[] = "transpose=" . $this->transpose;
+		}
+		if ($this->doubleflip) {
+			$result[] = "-vf";
+			$result[] = "hflip,vflip";
+		}
+		$result[] = "-metadata:s:v:0";
+		$result[] = "rotate=0";		
+		return $result;
+    }
+	
+	public function getTranspose() {
+	}
+}
+
+
+
 Class RotationResizeFilter implements FFMpeg\Filters\Video\VideoFilterInterface
 {
     /** fits to the dimensions, might introduce anamorphosis */
@@ -304,3 +351,12 @@ Class RotationResizeFilter implements FFMpeg\Filters\Video\VideoFilterInterface
     }
 	
 }
+
+
+Class NullAudio extends FFMpeg\Format\Audio\DefaultAudio {
+    public function getAvailableAudioCodecs() {
+        return array();
+    }
+}
+
+

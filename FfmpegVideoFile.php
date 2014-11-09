@@ -3,12 +3,6 @@
 require_once(dirname(__FILE__) . "/FfmpegVideoCodecs.php");
 require_once(dirname(__FILE__) . "/FfmpegVideoTranscoding.php");
 
-Class NullAudio extends FFMpeg\Format\Audio\DefaultAudio {
-    public function getAvailableAudioCodecs() {
-        return array();
-    }
-}
-
 Class FfmpegVideoFile {
 	
 	private $filename;
@@ -22,10 +16,10 @@ Class FfmpegVideoFile {
 		$this->movie = new ffmpeg_movie($name);
 		$this->ffmpeg = FFMpeg\FFMpeg::create();
 		$this->video = $this->ffmpeg->open($name);
-		$this->rotation = 0;
+		$this->rotation = @$options["rotate_add"] ? $options["rotate_add"] : 0;
 		if (@$options["rotation"]) {
 			try {
-				$this->rotation = FfmpegVideoTranscoding::getRotation($name);
+				$this->rotation += FfmpegVideoTranscoding::getRotation($name);
 			} catch (Exception $e) {}
 		}
 	}
@@ -66,18 +60,23 @@ Class FfmpegVideoFile {
 		return tempnam(sys_get_temp_dir(), "");
 	}
 	
-	function saveImageBySecond($filename = NULL, $seconds = 0, $extension = "png") {
+	function saveImageBySecond($filename = NULL, $seconds = 0, $extension = "png", $safeRevertToZero = FALSE) {
 		$filename = $filename == NULL ? $this->getTempFileName() . "." . $extension : $filename;
-		$this->video->frame(FFMpeg\Coordinate\TimeCode::fromSeconds($seconds))->save($filename);
+		$frame = $this->video->frame(FFMpeg\Coordinate\TimeCode::fromSeconds($seconds));
+		if (@$this->rotation)
+			$frame->addFilter(new RotationFrameFilter($this->rotation));
+		$frame->save($filename);
+		if ($safeRevertToZero && !is_file($filename)) {
+			$frame = $this->video->frame(0);
+			if (@$this->rotation)
+				$frame->addFilter(new RotationFrameFilter($this->rotation));
+			$frame->save($filename);
+		}
 		return $filename;
 	}
 	
 	function saveImageByPercentage($filename = NULL, $percentage = 0, $extension = "png", $safeRevertToZero = FALSE) {
-		$filename = $filename == NULL ? $this->getTempFileName() . "." . $extension : $filename;
-		$this->video->frame(FFMpeg\Coordinate\TimeCode::fromSeconds($percentage * $this->getDuration()))->save($filename);
-		if ($safeRevertToZero && !is_file($filename))
-			$this->video->frame(0)->save($filename);
-		return $filename;
+		return $this->saveImageBySecond($filename, $percentage * $this->getDuration(), $extension, $safeRevertToZero);
 	}
 	
 	function saveAudio($filename = NULL, $extension = "wav") {
