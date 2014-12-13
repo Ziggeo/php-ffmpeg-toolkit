@@ -51,7 +51,7 @@ Class FfmpegVideoTranscoding {
 	 * Options:
 	 *  - bool replace (optional): Default is false
 	 *  - string target (optional): Target file name
-	 *  - string watermark (optional): Watermark file name
+	 *  - array filters (optional): Other filters
 	 *  - string format (optional): Mp4 / Flv
 	 *  - width (optional): New width
 	 *  - height (optional): New height
@@ -86,8 +86,9 @@ Class FfmpegVideoTranscoding {
 			if (@$options["width"] && @$options["height"])
 				$video->addFilter(new RotationResizeFilter($rotation, new FFMpeg\Coordinate\Dimension($options["width"], $options["height"]), @$options["resizefit"] ? $options["resizefit"] : "inset"));
 			$video->filters()->framerate(new FFMpeg\Coordinate\FrameRate(25), 250)->synchronize();
-			if (@$options["watermark"])
-				$video->addFilter(new WatermarkFilter($options["watermark"], 0.25, 0.95, 0.95));
+			if (@$options["filters"])
+				foreach($options["filters"] as $filter)
+					$video->addFilter($filter);
 			if (@$options["duration"])
 				$video->addFilter(new DurationFilter($options["duration"]));
 			if (@$options["format"]) {

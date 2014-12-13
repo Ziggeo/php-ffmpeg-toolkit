@@ -48,7 +48,7 @@ Class WatermarkFilter implements FFMpeg\Filters\Video\VideoFilterInterface {
 	
 	private $positiony;
 
-    public function __construct($filename, $scale_of_video, $positionx, $positiony, $priority = 0) {
+    public function __construct($filename, $scale_of_video = 0.25, $positionx = 0.95, $positiony = 0.95, $priority = 0) {
         $this->priority = $priority;
 		$this->filename = $filename;
         $this->scale_of_video = $scale_of_video;
