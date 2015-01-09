@@ -85,7 +85,9 @@ Class FfmpegVideoTranscoding {
 				$video->addFilter(new RotationFilter($rotation));
 			if (@$options["width"] && @$options["height"])
 				$video->addFilter(new RotationResizeFilter($rotation, new FFMpeg\Coordinate\Dimension($options["width"], $options["height"]), @$options["resizefit"] ? $options["resizefit"] : "inset"));
-			$video->filters()->framerate(new FFMpeg\Coordinate\FrameRate(25), 250)->synchronize();
+			$video->filters()->framerate(new FFMpeg\Coordinate\FrameRate(25), 250);
+			if (strpos($source, ".webm", strlen($source) - strlen(".webm")) === FALSE)
+				$video->filters()->synchronize();
 			if (@$options["filters"])
 				foreach($options["filters"] as $filter)
 					$video->addFilter($filter);

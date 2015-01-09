@@ -8,6 +8,8 @@ Class FfmpegVideoCodecs {
 			return "flv";
 		if (strpos($codec, "h264") !== FALSE)
 			return "mp4";
+		if (strpos($codec, "vp8") !== FALSE)
+			return "webm";
 		return "unknown";
 	}
 	
@@ -19,6 +21,8 @@ Class FfmpegVideoCodecs {
 			return "flv";
 		if (strpos($codec, "h264") !== FALSE)
 			return "mp4";
+		if (strpos($codec, "vp8") !== FALSE)
+			return "webm";
 		return "unknown";
 	}
 
