@@ -36,6 +36,42 @@ Class X264Baseline extends FFMpeg\Format\Video\X264 {
 }
 
 
+Class MapAndMergeFilter implements FFMpeg\Filters\Video\VideoFilterInterface {
+	
+	private $priority;
+	
+	private $filename;
+	
+	private $mapOriginal;
+	
+	private $mapThis;
+	
+	public function __construct($filename, $mapOriginal = 0, $mapThis = 1, $priority = 13) {
+		$this->priority = $priority;
+		$this->filename = $filename;
+		$this->mapOriginal = $mapOriginal;
+		$this->mapThis = $mapThis;
+	}
+	
+    public function getPriority() {
+        return $this->priority;
+    }
+
+    public function apply(FFMpeg\Media\Video $video, FFMpeg\Format\VideoInterface $format)
+    {
+    	return array(
+    		"-i",
+    		$this->filename,
+    		"-map",
+    		"0:" . $this->mapOriginal,
+    		"-map",
+    		"1:" . $this->mapThis
+    	);
+    }	
+
+}
+
+
 Class WatermarkFilter implements FFMpeg\Filters\Video\VideoFilterInterface {
 	
     private $priority;
