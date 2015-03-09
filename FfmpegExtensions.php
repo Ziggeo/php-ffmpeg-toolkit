@@ -168,6 +168,97 @@ Class DurationFilter implements FFMpeg\Filters\Video\VideoFilterInterface {
 }
 
 
+Class CropFilter implements FFMpeg\Filters\Video\VideoFilterInterface {
+
+	private $cropping;
+
+	public function __construct($cropping, $priority = 0) {
+		$this->priority = $priority;
+		$this->cropping = $cropping;
+	}
+
+	public function getPriority() {
+		return $this->priority;
+	}
+
+	public function apply(FFMpeg\Media\Video $video, FFMpeg\Format\VideoInterface $format) {
+	    $originalWidth = $originalHeight = null;
+
+        foreach ($video->getStreams() as $stream) {
+            if ($stream->isVideo()) {
+                if ($stream->has('width')) {
+                    $originalWidth = $stream->get('width');
+                }
+                if ($stream->has('height')) {
+                    $originalHeight = $stream->get('height');
+                }
+            }
+        }
+        
+        $cropping = $this->cropping;
+        $w = isset($cropping["width"]) ? $cropping["width"] : $originalWidth;
+        $h = isset($cropping["height"]) ? $cropping["height"] : $originalHeight;
+        $x = isset($cropping["x"]) ? $cropping["x"] : (ceil(($originalWidth - $w) / 2));
+        $y = isset($cropping["y"]) ? $cropping["y"] : (ceil(($originalHeight - $h) / 2));
+                
+		return array(
+			"-vf",
+			"crop=" . join(":", array($w, $h, $x, $y))
+		);
+	}
+}
+
+
+Class CropRatioFilter implements FFMpeg\Filters\Video\VideoFilterInterface {
+
+	private $ratio;
+
+	public function __construct($ratio, $priority = 0) {
+		$this->priority = $priority;
+		$this->ratio = $ratio;
+	}
+
+	public function getPriority() {
+		return $this->priority;
+	}
+
+	public function apply(FFMpeg\Media\Video $video, FFMpeg\Format\VideoInterface $format) {
+		
+	    $originalWidth = $originalHeight = null;
+
+        foreach ($video->getStreams() as $stream) {
+            if ($stream->isVideo()) {
+                if ($stream->has('width')) {
+                    $originalWidth = $stream->get('width');
+                }
+                if ($stream->has('height')) {
+                    $originalHeight = $stream->get('height');
+                }
+            }
+        }
+        
+        $originalRatio = $originalWidth / $originalHeight;
+        if ($originalRatio == $this->ratio)
+        	return array();
+        
+        $w = $originalWidth;
+        $h = $originalHeight;
+        
+        if ($originalRatio > $this->ratio)
+        	$w = $originalHeight * $this->ratio;
+        else 
+        	$h = $originalWidth / $this->ratio;
+                
+        $x = ceil(($originalWidth - $w) / 2);
+        $y = ceil(($originalHeight - $h) / 2);
+        
+        return array(
+			"-vf",
+			"crop=" . join(":", array($w, $h, $x, $y))
+		);
+	}
+}
+
 
 Class RotationFilter implements FFMpeg\Filters\Video\VideoFilterInterface {
 	
