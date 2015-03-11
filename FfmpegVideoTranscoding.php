@@ -114,6 +114,7 @@ Class FfmpegVideoTranscoding {
 		if (@$options["faststart"] && $options["format"] == "mp4")
 			self::faststart($target);
 		if (@$options["replace"]) {
+			unlink($source);
 			if (!rename($target, $source)) {
 				@unlink($target);
 				throw new VideoTranscodingException(VideoTranscodingException::TRANSCODE_RENAME_FAILED);
