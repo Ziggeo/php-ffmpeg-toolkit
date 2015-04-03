@@ -62,6 +62,12 @@ Class FfmpegVideoFile {
 	
 	function saveImageBySecond($filename = NULL, $seconds = 0, $extension = "png", $safeRevertToZero = FALSE) {
 		$filename = $filename == NULL ? $this->getTempFileName() . "." . $extension : $filename;
+		$frameCount = $this->movie->getFrameCount();
+		if ($frameCount > 0) {
+			$frameDuration = $this->getDuration() / $frameCount;
+			if (ceil($seconds / $frameDuration) >= $frameCount)
+				$seconds = ($frameCount-1) * $frameDuration;
+		}
 		$frame = $this->video->frame(FFMpeg\Coordinate\TimeCode::fromSeconds($seconds));
 		if (@$this->rotation)
 			$frame->addFilter(new RotationFrameFilter($this->rotation));
