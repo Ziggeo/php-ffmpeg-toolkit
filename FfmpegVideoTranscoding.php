@@ -65,6 +65,10 @@ Class FfmpegVideoTranscoding {
 	 */	
 	public static function transcode($source, $options) {
 		$target = @$options["target"] ? $options["target"] : tempnam(sys_get_temp_dir(), "");
+		if (@$options["width"] && $options["width"] % 2 == 1)
+			$options["width"]--;
+		if (@$options["height"] && $options["height"] % 2 == 1)
+			$options["height"]--;
 		try {
 			$config = array(
 				"timeout" => isset($options["timeout"]) ? $options["timeout"] : 60 * 60 * 24
