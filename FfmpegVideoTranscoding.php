@@ -128,7 +128,7 @@ Class FfmpegVideoTranscoding {
 	}
 
 	public static function getRotation($file) {
-		$command = self::$qtrotate_binary . " " . $file;
+		$command = self::$qtrotate_binary . " '" . $file . "'";
 		$result = 0;
 		try { 
 			exec($command, $output, $result);
