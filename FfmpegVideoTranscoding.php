@@ -17,7 +17,7 @@ Class FfmpegVideoTranscoding {
 	 */
 	public static function faststart($source, $options = array()) {
 		$target = @$options["target"] ? $options["target"] : tempnam(sys_get_temp_dir(), "");
-		$command = self::$faststart_binary . " " . $source . " " . $target;
+		$command = self::$faststart_binary . " '" . $source . "' '" . $target . "'";
 		$result = 0;
 		try { 
 			exec($command, $output, $result);
