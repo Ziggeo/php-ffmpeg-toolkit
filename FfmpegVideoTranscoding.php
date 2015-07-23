@@ -1,5 +1,8 @@
 <?php
 
+// TODO: Remove old ffmpeg
+// TODO: Add -movflags faststart
+
 require_once(dirname(__FILE__) . "/FfmpegExtensions.php");
 
 
@@ -63,7 +66,7 @@ Class FfmpegVideoTranscoding {
 	 *  - bool old_ffmpeg (optional, default false)
 	 * 
 	 */	
-	public static function transcode($source, $options) {
+	public static function transcode($source, $options) {		
 		$target = @$options["target"] ? $options["target"] : tempnam(sys_get_temp_dir(), "");
 		if (@$options["width"] && $options["width"] % 2 == 1)
 			$options["width"]--;
@@ -90,8 +93,7 @@ Class FfmpegVideoTranscoding {
 			if (@$options["width"] && @$options["height"])
 				$video->addFilter(new RotationResizeFilter($rotation, new FFMpeg\Coordinate\Dimension($options["width"], $options["height"]), @$options["resizefit"] ? $options["resizefit"] : "inset"));
 			$video->filters()->framerate(new FFMpeg\Coordinate\FrameRate(25), 250);
-			if (strpos($source, ".webm", strlen($source) - strlen(".webm")) === FALSE)
-				$video->filters()->synchronize();
+			$video->filters()->synchronize();
 			if (@$options["filters"])
 				foreach($options["filters"] as $filter)
 					$video->addFilter($filter);
@@ -138,6 +140,68 @@ Class FfmpegVideoTranscoding {
 		} catch (Exception $e) {
 			throw new VideoTranscodingException(VideoTranscodingException::QTROTATE_FAILED, (string)$e);
 		}
+	}
+	
+	private static function extractAudio($source, $format) {
+		try {
+			$target = tempnam(sys_get_temp_dir(), "") . "." . $format;
+			$config = array(
+				"timeout" => 60 * 60 * 24
+			);
+			if (self::$ffmpeg_binary)
+				$config["ffmpeg.binaries"] = array(self::$ffmpeg_binary);
+			$ffmpeg = FFMpeg\FFMpeg::create($config);
+			$video = $ffmpeg->open($source);
+			$video->addFilter(new AudioOnlyFilter());
+			$format = new ExtraParamsDefaultVideo();
+			$video->save($format, $target);
+			return $target;
+		} catch (Exception $e) {
+			throw new VideoTranscodingException(VideoTranscodingException::TRANSCODE_EXCEPTION, (string)$e);
+		}
+	}
+	
+	private static function transcodeAudioVideoSeparately($source, $options) {
+		try {
+			$audio = self::extractAudio($source, "aac");
+			$video = self::transcode($source, array(
+				"format" => $options["format"],
+				"rotate" => $options["rotate"],
+				"rotate_add" => $options["rotate_add"],
+				"old_ffmpeg" => $options["old_ffmpeg"]
+			));
+			unset($options["rotate"]);
+			unset($options["rotate_add"]);
+			if (!@$options["filters"])
+				$options["filters"] = array();
+			$options["filters"][] = new MapAndMergeFilter($audio, 0, 0);
+			$result = self::transcode($video, $options);	
+			@unlink($audio);
+			@unlink($video);
+			return $result;
+		} catch (VideoTranscodingException $e) {
+			@unlink($audio);
+			@unlink($video);
+			throw $e;
+		}
+	}
+	
+	private static function separateAudioVideoTranscodingRequired($source, $options) {
+		if (strpos($source, ".webm", strlen($source) - strlen(".webm")) !== FALSE) {
+			if (@$options["filters"]) {
+				foreach ($options["filters"] as $filter)
+					if ($filter instanceof MapAndMergeFilter)
+						return FALSE;
+			}
+			return TRUE;
+		}
+		return FALSE;
+	}
+	
+	public static function transcodeGracefully($source, $options) {
+		return self::separateAudioVideoTranscodingRequired($source, $options) ?
+			self::transcodeAudioVideoSeparately($source, $options) :
+			self::transcode($source, $options);
 	}
 	
 }

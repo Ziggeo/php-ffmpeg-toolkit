@@ -72,6 +72,28 @@ Class MapAndMergeFilter implements FFMpeg\Filters\Video\VideoFilterInterface {
 }
 
 
+Class AudioOnlyFilter implements FFMpeg\Filters\Video\VideoFilterInterface {
+	
+	private $priority;
+	
+	public function __construct($priority = 0) {
+		$this->priority = $priority;
+	}
+	
+    public function getPriority() {
+        return $this->priority;
+    }
+
+    public function apply(FFMpeg\Media\Video $video, FFMpeg\Format\VideoInterface $format)
+    {
+    	return array(
+    		"-vn"
+    	);
+    }	
+
+}
+
+
 Class WatermarkFilter implements FFMpeg\Filters\Video\VideoFilterInterface {
 	
     private $priority;
