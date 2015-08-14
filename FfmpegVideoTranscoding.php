@@ -88,6 +88,33 @@ Class FfmpegVideoTranscoding {
 				}
 			}
 			$video = $ffmpeg->open($source);
+			
+			$bitSize = 500;
+			try {
+				$originalWidth = $originalHeight = null;
+				
+				foreach ($video->getStreams() as $stream) {
+					if ($stream->isVideo()) {
+						if ($stream->has('width')) {
+							$originalWidth = $stream->get('width');
+						}
+						if ($stream->has('height')) {
+							$originalHeight = $stream->get('height');
+						}
+					}
+				}
+				
+				$pixelSize = NULL;
+				if (@$originalWidth && @$originalHeight) {
+					$pixelSize = $originalWidth * $originalHeight;
+					if (@$options["width"] && @$options["height"])
+						$pixelSize = min($pixelSize, $options["width"] * $options["height"]);
+					$bitSize = round(500 * $pixelSize / (640 * 480));
+				}
+			} catch (Exception $e) {
+				
+			}
+				
 			if (@$rotation)
 				$video->addFilter(new RotationFilter($rotation));
 			if (@$options["width"] && @$options["height"])
@@ -102,10 +129,10 @@ Class FfmpegVideoTranscoding {
 			if (@$options["format"]) {
 				if ($options["format"] == "mp4") {
 					$format = new X264Baseline();
-					$format->setKiloBitrate(500);
+					$format->setKiloBitrate($bitSize);
 					$format->setAudioKiloBitrate(64);
 				} elseif ($options["format"] == "flv") {
-					$format->setKiloBitrate(500);
+					$format->setKiloBitrate($bitSize);
 					$format->setAudioKiloBitrate(64);
 					$format->setExtraParams(array("-f", "flv", "-ar", "44100"));
 				} else
