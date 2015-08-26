@@ -90,6 +90,7 @@ Class FfmpegVideoTranscoding {
 			$video = $ffmpeg->open($source);
 			
 			$bitSize = 500;
+			$audioBitrate = 64;
 			try {
 				$originalWidth = $originalHeight = null;
 				
@@ -101,6 +102,8 @@ Class FfmpegVideoTranscoding {
 						if ($stream->has('height')) {
 							$originalHeight = $stream->get('height');
 						}
+					} else if ($stream->isAudio()) {
+						$audioBitrate = max($audioBitrate, round($stream->get("bit_rate") / 1000));
 					}
 				}
 				
@@ -130,10 +133,10 @@ Class FfmpegVideoTranscoding {
 				if ($options["format"] == "mp4") {
 					$format = new X264Baseline();
 					$format->setKiloBitrate($bitSize);
-					$format->setAudioKiloBitrate(64);
+					$format->setAudioKiloBitrate($audioBitrate);
 				} elseif ($options["format"] == "flv") {
 					$format->setKiloBitrate($bitSize);
-					$format->setAudioKiloBitrate(64);
+					$format->setAudioKiloBitrate($audioBitrate);
 					$format->setExtraParams(array("-f", "flv", "-ar", "44100"));
 				} else
 					throw new VideoTranscodingException(VideoTranscodingException::TRANSCODE_UNKNOWN_TARGET_FORMAT, $options["format"]);
