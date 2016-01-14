@@ -2,6 +2,7 @@
 
 // TODO: Remove old ffmpeg
 // TODO: Add -movflags faststart
+// TODO: Update Rotation
 
 require_once(dirname(__FILE__) . "/FfmpegExtensions.php");
 
@@ -9,8 +10,7 @@ require_once(dirname(__FILE__) . "/FfmpegExtensions.php");
 Class FfmpegVideoTranscoding {
 	
 	public static $faststart_binary = "qt-faststart";
-	//public static $qtrotate_binary = "qtrotate.py";
-	public static $qtrotate_binary = dirname(__FILE__) . "/vendors/qtrotate.py";
+	public static $qtrotate_binary = "qtrotate.py";
 	
 	public static $ffmpeg_binary = NULL;
 	
@@ -268,3 +268,5 @@ Class VideoTranscodingException extends Exception {
 	}
 	
 }
+
+FfmpegVideoTranscoding::$qtrotate_binary = dirname(__FILE__) . "/vendors/qtrotate.py";
