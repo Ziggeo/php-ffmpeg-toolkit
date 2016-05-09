@@ -194,8 +194,13 @@ Class FfmpegVideoTranscoding {
 	}
 	
 	private static function transcodeAudioVideoSeparately($source, $options) {
+		$audio = NULL;				
 		try {
 			$audio = self::extractAudio($source, "aac");
+		} catch (Exception $e) {
+			return self::transcode($source, $options);
+		}
+		try {
 			$video = self::transcode($source, array(
 				"format" => $options["format"],
 				"rotate" => $options["rotate"],
