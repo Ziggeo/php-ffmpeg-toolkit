@@ -30,7 +30,7 @@ Class ExtraParamsDefaultVideo extends FFMpeg\Format\Video\DefaultVideo {
 Class X264Baseline extends FFMpeg\Format\Video\X264 {
 
     public function getExtraParams() {
-       	return array("-profile:v", "baseline", "-f", "mp4");
+       	return array("-profile:v", "baseline", "-f", "mp4", "-pix_fmt", "yuv420p");
     }	
 	
 }
