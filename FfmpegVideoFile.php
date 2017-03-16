@@ -100,4 +100,8 @@ Class FfmpegVideoFile {
 		return FfmpegVideoCodecs::videoSubTypeByCodec($this->getVideoCodec());
 	}
 
+    function getAudioSubType() {
+        return FfmpegVideoCodecs::audioSubTypeByCodec($this->getAudioCodec());
+    }
+
 }

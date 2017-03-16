@@ -37,4 +37,11 @@ Class FfmpegVideoCodecs {
 		return "other";
 	}
 
+    static function audioSubTypeByCodec($codec) {
+        $codec = strtolower($codec);
+        if (strpos($codec, "opus") !== FALSE)
+            return "opus";
+        return "other";
+    }
+
 }
