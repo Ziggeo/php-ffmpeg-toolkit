@@ -64,6 +64,7 @@ Class FfmpegVideoTranscoding {
 	 *  - bool faststart (optional),
 	 *  - int duration (optional)
 	 *  - bool rotate (optional, default false),
+	 *  - bool autorotate
 	 *  - int rotate_add (optional)
 	 *  - bool old_ffmpeg (optional, default false)
 	 * 
@@ -89,6 +90,7 @@ Class FfmpegVideoTranscoding {
 					// Ignore it and assume rotation 0
 				}
 			}
+            $autorotate = @$options["autorotate"] ? $options["autorotate"] : FALSE;
 			$video = $ffmpeg->open($source);
 			
 			$bitSize = 500;
@@ -119,8 +121,8 @@ Class FfmpegVideoTranscoding {
 			} catch (Exception $e) {
 				
 			}
-				
-			if (@$rotation)
+
+			if (@$rotation && !@$autorotate)
 				$video->addFilter(new RotationFilter($rotation));
 			if (@$options["width"] && @$options["height"])
 				$video->addFilter(new RotationResizeFilter($rotation, new FFMpeg\Coordinate\Dimension($options["width"], $options["height"]), @$options["resizefit"] ? $options["resizefit"] : "inset"));

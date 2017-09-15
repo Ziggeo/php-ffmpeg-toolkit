@@ -17,6 +17,7 @@ Class FfmpegVideoFile {
 		$this->ffmpeg = FFMpeg\FFMpeg::create();
 		$this->video = $this->ffmpeg->open($name);
 		$this->rotation = @$options["rotate_add"] ? $options["rotate_add"] : 0;
+        $this->autorotate = @$options["autorotate"] ? $options["autorotate"] : FALSE;
 		if (@$options["rotation"]) {
 			try {
 				$this->rotation += FfmpegVideoTranscoding::getRotation($name);
@@ -69,12 +70,12 @@ Class FfmpegVideoFile {
 				$seconds = ($frameCount-1) * $frameDuration;
 		}
 		$frame = $this->video->frame(FFMpeg\Coordinate\TimeCode::fromSeconds($seconds));
-		if (@$this->rotation)
+		if (@$this->rotation && !$this->autorotate)
 			$frame->addFilter(new RotationFrameFilter($this->rotation));
 		$frame->save($filename);
 		if ($safeRevertToZero && !is_file($filename)) {
 			$frame = $this->video->frame(0);
-			if (@$this->rotation)
+			if (@$this->rotation && !$this->autorotate)
 				$frame->addFilter(new RotationFrameFilter($this->rotation));
 			$frame->save($filename);
 		}

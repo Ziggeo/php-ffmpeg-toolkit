@@ -158,7 +158,7 @@ Class WatermarkFilter implements FFMpeg\Filters\Video\VideoFilterInterface {
 		
         $commands = array(
         	"-vf",
-        	'movie=' . $this->filename . ', scale=' . $scale_width . ":" . $scale_height . ' [wm];[in][wm] overlay=' . $posx . ':' . $posy . ' [out]'
+        	'movie=' . $this->filename . ',scale=' . $scale_width . ":" . $scale_height . '[wm];[in][wm]overlay=' . $posx . ':' . $posy . '[out]'
 		);
 
         return $commands;
