@@ -13,8 +13,16 @@ Class FfmpegVideoFile {
 	
 	function __construct($name, $options = array()) {
 		$this->filename = $name;
-		$this->movie = new ffmpeg_movie($name);
-		$this->ffmpeg = FFMpeg\FFMpeg::create();
+		$ffmpeg_binary = "ffmpeg";
+        if (FfmpegVideoTranscoding::$ffmpeg_binary)
+            $ffmpeg_binary = FfmpegVideoTranscoding::$ffmpeg_binary;
+		$this->movie = new FFmpegMovie($name, NULL, $ffmpeg_binary);
+		$config = array();
+        if (FfmpegVideoTranscoding::$ffmpeg_binary)
+            $config["ffmpeg.binaries"] = array(FfmpegVideoTranscoding::$ffmpeg_binary);
+        if (FfmpegVideoTranscoding::$ffprobe_binary)
+            $config["ffprobe.binaries"] = array(FfmpegVideoTranscoding::$ffprobe_binary);
+		$this->ffmpeg = FFMpeg\FFMpeg::create($config);
 		$this->video = $this->ffmpeg->open($name);
 		$this->rotation = @$options["rotate_add"] ? $options["rotate_add"] : 0;
         $this->autorotate = @$options["autorotate"] ? $options["autorotate"] : FALSE;

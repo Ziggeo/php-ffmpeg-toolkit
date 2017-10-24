@@ -1,6 +1,5 @@
 <?php
 
-// TODO: Remove old ffmpeg
 // TODO: Add -movflags faststart
 // TODO: Update Rotation
 
@@ -13,6 +12,7 @@ Class FfmpegVideoTranscoding {
 	public static $qtrotate_binary = "qtrotate.py";
 	
 	public static $ffmpeg_binary = NULL;
+    public static $ffprobe_binary = NULL;
 	
 	/* Returns target file name
 	 * 
@@ -66,8 +66,7 @@ Class FfmpegVideoTranscoding {
 	 *  - bool rotate (optional, default false),
 	 *  - bool autorotate
 	 *  - int rotate_add (optional)
-	 *  - bool old_ffmpeg (optional, default false)
-	 * 
+	 *
 	 */	
 	public static function transcode($source, $options) {		
 		$target = @$options["target"] ? $options["target"] : tempnam(sys_get_temp_dir(), "");
@@ -81,7 +80,9 @@ Class FfmpegVideoTranscoding {
 			);
 			if (self::$ffmpeg_binary)
 				$config["ffmpeg.binaries"] = array(self::$ffmpeg_binary);
-			$ffmpeg = @$options["old_ffmpeg"] ? FFMpegOld::create($config) : FFMpeg\FFMpeg::create($config);
+            if (self::$ffprobe_binary)
+                $config["ffprobe.binaries"] = array(self::$ffprobe_binary);
+			$ffmpeg = FFMpeg\FFMpeg::create($config);
 			$rotation = @$options["rotate_add"] ? $options["rotate_add"] : 0;
 			if (@$options["rotate"]) {
 				try {
@@ -184,6 +185,8 @@ Class FfmpegVideoTranscoding {
 			);
 			if (self::$ffmpeg_binary)
 				$config["ffmpeg.binaries"] = array(self::$ffmpeg_binary);
+            if (self::$ffprobe_binary)
+                $config["ffprobe.binaries"] = array(self::$ffprobe_binary);
 			$ffmpeg = FFMpeg\FFMpeg::create($config);
 			$video = $ffmpeg->open($source);
 			$video->addFilter(new AudioOnlyFilter());
@@ -206,8 +209,7 @@ Class FfmpegVideoTranscoding {
 			$video = self::transcode($source, array(
 				"format" => $options["format"],
 				"rotate" => $options["rotate"],
-				"rotate_add" => $options["rotate_add"],
-				"old_ffmpeg" => $options["old_ffmpeg"]
+				"rotate_add" => $options["rotate_add"]
 			));
 			unset($options["rotate"]);
 			unset($options["rotate_add"]);
