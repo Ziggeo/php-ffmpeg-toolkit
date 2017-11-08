@@ -164,18 +164,34 @@ Class FfmpegVideoTranscoding {
 			return $target;
 	}
 
-	public static function getRotation($file) {
-		$command = self::$qtrotate_binary . " '" . $file . "'";
-		$result = 0;
-		try { 
-			exec($command, $output, $result);
-			if ($result != 0) 
-				throw new VideoTranscodingException(VideoTranscodingException::QTROTATE_FAILED);
-			return intval($output[0]);
-		} catch (Exception $e) {
-			throw new VideoTranscodingException(VideoTranscodingException::QTROTATE_FAILED, (string)$e);
-		}
-	}
+    private static function alternativeRotation($file) {
+        $provider = new FFprobeOutputProvider();
+        $provider->setMovieFile($file);
+        $output = $provider->getOutput();
+        $matches = array();
+        $result = preg_match('/displaymatrix: rotation of (.+) degrees/', $output, $matches);
+        $rotation = 0;
+        if ($result && count($matches) === 2)
+            $rotation = intval(-$matches[1]);
+        return $rotation;
+    }
+
+    public static function getRotation($file) {
+        $command = self::$qtrotate_binary . " '" . $file . "'";
+        $result = 0;
+        try {
+            exec($command, $output, $result);
+            if ($result != 0)
+                throw new VideoTranscodingException(VideoTranscodingException::QTROTATE_FAILED);
+            return intval($output[0]);
+        } catch (Exception $e) {
+            try {
+                return self::alternativeRotation($file);
+            } catch (Exception $f) {
+                throw new VideoTranscodingException(VideoTranscodingException::QTROTATE_FAILED, (string)$e);
+            }
+        }
+    }
 	
 	private static function extractAudio($source, $format) {
 		try {
