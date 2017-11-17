@@ -125,6 +125,14 @@ Class FfmpegVideoTranscoding {
 
 			if (@$rotation && !@$autorotate)
 				$video->addFilter(new RotationFilter($rotation));
+			if (@$originalWidth && @$originalHeight && !@$options["width"] && !@$options["height"] && ($originalWidth % 2 == 1 || $originalHeight % 2 == 1)) {
+                $options["width"] = $originalWidth;
+                $options["height"] = $originalHeight;
+                if ($options["width"] % 2 == 1)
+                    $options["width"]--;
+                if ($options["height"] % 2 == 1)
+                    $options["height"]--;
+            }
 			if (@$options["width"] && @$options["height"])
 				$video->addFilter(new RotationResizeFilter($rotation, new FFMpeg\Coordinate\Dimension($options["width"], $options["height"]), @$options["resizefit"] ? $options["resizefit"] : "inset"));
 			$video->filters()->framerate(new FFMpeg\Coordinate\FrameRate(25), 250);
