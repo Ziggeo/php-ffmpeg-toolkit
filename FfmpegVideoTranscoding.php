@@ -22,6 +22,7 @@ Class FfmpegVideoTranscoding {
 	 */
 	public static function faststart($source, $options = array()) {
 		$target = @$options["target"] ? $options["target"] : tempnam(sys_get_temp_dir(), "");
+		touch($target);
 		$command = self::$faststart_binary . " '" . $source . "' '" . $target . "'";
 		$result = 0;
 		try { 
@@ -70,6 +71,7 @@ Class FfmpegVideoTranscoding {
 	 */	
 	public static function transcode($source, $options) {		
 		$target = @$options["target"] ? $options["target"] : tempnam(sys_get_temp_dir(), "");
+		touch($target);
 		if (@$options["width"] && $options["width"] % 2 == 1)
 			$options["width"]--;
 		if (@$options["height"] && $options["height"] % 2 == 1)
@@ -204,7 +206,8 @@ Class FfmpegVideoTranscoding {
 	private static function extractAudio($source, $format) {
 		try {
 			$target = tempnam(sys_get_temp_dir(), "") . "." . $format;
-			$config = array(
+            touch($target);
+            $config = array(
 				"timeout" => 60 * 60 * 24
 			);
 			if (self::$ffmpeg_binary)

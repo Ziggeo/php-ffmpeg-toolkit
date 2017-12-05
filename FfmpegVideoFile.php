@@ -71,6 +71,7 @@ Class FfmpegVideoFile {
 	
 	function saveImageBySecond($filename = NULL, $seconds = 0, $extension = "png", $safeRevertToZero = FALSE) {
 		$filename = $filename == NULL ? $this->getTempFileName() . "." . $extension : $filename;
+		touch($filename);
 		$frameCount = $this->movie->getFrameCount();
 		if ($frameCount > 0) {
 			$frameDuration = $this->getDuration() / $frameCount;
@@ -96,6 +97,7 @@ Class FfmpegVideoFile {
 	
 	function saveAudio($filename = NULL, $extension = "wav") {
 		$filename = $filename == NULL ? $this->getTempFileName() . "." . $extension : $filename;
+		touch($filename);
 		$audio = new FFMpeg\Media\Audio($this->filename, $this->ffmpeg->getFFMpegDriver(), $this->ffmpeg->getFFProbe());
 		$audio->save(new NullAudio(), $filename);
 		return $filename;
