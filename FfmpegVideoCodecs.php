@@ -19,6 +19,8 @@ Class FfmpegVideoCodecs {
 		$codec = strtolower($codec);
 		if (strpos(strtolower($filename), ".mov") !== FALSE)
 			return "mov";
+        if (strpos(strtolower($filename), ".m4v") !== FALSE)
+            return "m4v";
 		if (strpos($codec, "flv") !== FALSE)
 			return "flv";
 		if (strpos($codec, "h264") !== FALSE)
