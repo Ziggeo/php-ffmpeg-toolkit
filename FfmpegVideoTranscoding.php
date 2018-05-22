@@ -7,15 +7,15 @@ require_once(dirname(__FILE__) . "/FfmpegExtensions.php");
 
 
 Class FfmpegVideoTranscoding {
-	
+
 	public static $faststart_binary = "qt-faststart";
 	public static $qtrotate_binary = "qtrotate.py";
-	
+
 	public static $ffmpeg_binary = NULL;
     public static $ffprobe_binary = NULL;
-	
+
 	/* Returns target file name
-	 * 
+	 *
 	 * Options:
 	 *  - bool replace (optional): Default is true
 	 *  - string target (optional)
@@ -25,9 +25,9 @@ Class FfmpegVideoTranscoding {
 		touch($target);
 		$command = self::$faststart_binary . " '" . $source . "' '" . $target . "'";
 		$result = 0;
-		try { 
+		try {
 			exec($command, $output, $result);
-			if ($result != 0) 
+			if ($result != 0)
 				throw new VideoTranscodingException(VideoTranscodingException::FAST_START_EXEC_FAILED);
 			if (file_exists($target) && filesize($target) > 0) {
 				if (!isset($options["replace"]) || $options["replace"]) {
@@ -50,10 +50,10 @@ Class FfmpegVideoTranscoding {
 			throw new VideoTranscodingException(VideoTranscodingException::FAST_START_EXCEPTION, $e->getMessage());
 		}
 	}
-	
-	
+
+
 	/* Returns temporary filename or throws exception
-	 * 
+	 *
 	 * Options:
 	 *  - bool replace (optional): Default is false
 	 *  - string target (optional): Target file name
@@ -68,66 +68,66 @@ Class FfmpegVideoTranscoding {
 	 *  - bool autorotate
 	 *  - int rotate_add (optional)
 	 *
-	 */	
-	public static function transcode($source, $options) {		
-		$target = @$options["target"] ? $options["target"] : tempnam(sys_get_temp_dir(), "");
-		touch($target);
-		if (@$options["width"] && $options["width"] % 2 == 1)
-			$options["width"]--;
-		if (@$options["height"] && $options["height"] % 2 == 1)
-			$options["height"]--;
-		try {
-			$config = array(
-				"timeout" => isset($options["timeout"]) ? $options["timeout"] : 60 * 60 * 24
-			);
-			if (self::$ffmpeg_binary)
-				$config["ffmpeg.binaries"] = array(self::$ffmpeg_binary);
+	 */
+    public static function transcode($source, $options) {
+        $target = @$options["target"] ? $options["target"] : tempnam(sys_get_temp_dir(), "");
+        touch($target);
+        if (@$options["width"] && $options["width"] % 2 == 1)
+            $options["width"]--;
+        if (@$options["height"] && $options["height"] % 2 == 1)
+            $options["height"]--;
+        try {
+            $config = array(
+                "timeout" => isset($options["timeout"]) ? $options["timeout"] : 60 * 60 * 24
+            );
+            if (self::$ffmpeg_binary)
+                $config["ffmpeg.binaries"] = array(self::$ffmpeg_binary);
             if (self::$ffprobe_binary)
                 $config["ffprobe.binaries"] = array(self::$ffprobe_binary);
-			$ffmpeg = FFMpeg\FFMpeg::create($config);
-			$rotation = @$options["rotate_add"] ? $options["rotate_add"] : 0;
-			if (@$options["rotate"]) {
-				try {
-					$rotation += self::getRotation($source);
-				} catch (VideoTranscodingException $e) {
-					// Ignore it and assume rotation 0
-				}
-			}
+            $ffmpeg = FFMpeg\FFMpeg::create($config);
+            $rotation = @$options["rotate_add"] ? $options["rotate_add"] : 0;
+            if (@$options["rotate"]) {
+                try {
+                    $rotation += self::getRotation($source);
+                } catch (VideoTranscodingException $e) {
+                    // Ignore it and assume rotation 0
+                }
+            }
             $autorotate = @$options["autorotate"] ? $options["autorotate"] : FALSE;
-			$video = $ffmpeg->open($source);
-			
-			$bitSize = 500;
-			$audioBitrate = 64;
-			try {
-				$originalWidth = $originalHeight = null;
-				
-				foreach ($video->getStreams() as $stream) {
-					if ($stream->isVideo()) {
-						if ($stream->has('width')) {
-							$originalWidth = $stream->get('width');
-						}
-						if ($stream->has('height')) {
-							$originalHeight = $stream->get('height');
-						}
-					} else if ($stream->isAudio()) {
-						$audioBitrate = max($audioBitrate, round($stream->get("bit_rate") / 1000));
-					}
-				}
-				
-				$pixelSize = NULL;
-				if (@$originalWidth && @$originalHeight) {
-					$pixelSize = $originalWidth * $originalHeight;
-					if (@$options["width"] && @$options["height"])
-						$pixelSize = min($pixelSize, $options["width"] * $options["height"]);
-					$bitSize = round(500 * $pixelSize / (640 * 480));
-				}
-			} catch (Exception $e) {
-				
-			}
+            $video = $ffmpeg->open($source);
 
-			if (@$rotation && !@$autorotate)
-				$video->addFilter(new RotationFilter($rotation));
-			if (@$originalWidth && @$originalHeight && !@$options["width"] && !@$options["height"] && ($originalWidth % 2 == 1 || $originalHeight % 2 == 1)) {
+            $bitSize = 500;
+            $audioBitrate = 64;
+            try {
+                $originalWidth = $originalHeight = null;
+
+                foreach ($video->getStreams() as $stream) {
+                    if ($stream->isVideo()) {
+                        if ($stream->has('width')) {
+                            $originalWidth = $stream->get('width');
+                        }
+                        if ($stream->has('height')) {
+                            $originalHeight = $stream->get('height');
+                        }
+                    } else if ($stream->isAudio() && !@$options["noaudio"]) {
+                        $audioBitrate = max($audioBitrate, round($stream->get("bit_rate") / 1000));
+                    }
+                }
+
+                $pixelSize = NULL;
+                if (@$originalWidth && @$originalHeight) {
+                    $pixelSize = $originalWidth * $originalHeight;
+                    if (@$options["width"] && @$options["height"])
+                        $pixelSize = min($pixelSize, $options["width"] * $options["height"]);
+                    $bitSize = round(500 * $pixelSize / (640 * 480));
+                }
+            } catch (Exception $e) {
+
+            }
+
+            if (@$rotation && !@$autorotate)
+                $video->addFilter(new RotationFilter($rotation));
+            if (@$originalWidth && @$originalHeight && !@$options["width"] && !@$options["height"] && ($originalWidth % 2 == 1 || $originalHeight % 2 == 1)) {
                 $options["width"] = $originalWidth;
                 $options["height"] = $originalHeight;
                 if ($options["width"] % 2 == 1)
@@ -135,44 +135,47 @@ Class FfmpegVideoTranscoding {
                 if ($options["height"] % 2 == 1)
                     $options["height"]--;
             }
-			if (@$options["width"] && @$options["height"])
-				$video->addFilter(new RotationResizeFilter($rotation, new FFMpeg\Coordinate\Dimension($options["width"], $options["height"]), @$options["resizefit"] ? $options["resizefit"] : "inset"));
-			$video->filters()->framerate(new FFMpeg\Coordinate\FrameRate(25), 250);
-			$video->filters()->synchronize();
-			if (@$options["filters"])
-				foreach($options["filters"] as $filter)
-					$video->addFilter($filter);
-			if (@$options["duration"])
-				$video->addFilter(new DurationFilter($options["duration"]));
-			if (@$options["format"]) {
-				if ($options["format"] == "mp4") {
-					$format = new X264Baseline();
-					$format->setKiloBitrate($bitSize);
-					$format->setAudioKiloBitrate($audioBitrate);
-				} elseif ($options["format"] == "flv") {
-					$format->setKiloBitrate($bitSize);
-					$format->setAudioKiloBitrate($audioBitrate);
-					$format->setExtraParams(array("-f", "flv", "-ar", "44100"));
-				} else
-					throw new VideoTranscodingException(VideoTranscodingException::TRANSCODE_UNKNOWN_TARGET_FORMAT, $options["format"]);
-			}
-			else
-				$format = new ExtraParamsDefaultVideo();			
-			$video->save($format, $target);
-		} catch (Exception $e) {
-			throw new VideoTranscodingException(VideoTranscodingException::TRANSCODE_EXCEPTION, (string)$e);
-		}
-		if (@$options["faststart"] && $options["format"] == "mp4")
-			self::faststart($target);
-		if (@$options["replace"]) {
-			unlink($source);
-			if (!rename($target, $source)) {
-				@unlink($target);
-				throw new VideoTranscodingException(VideoTranscodingException::TRANSCODE_RENAME_FAILED);
-			}
-		} else
-			return $target;
-	}
+            if (@$options["width"] && @$options["height"])
+                $video->addFilter(new RotationResizeFilter($rotation, new FFMpeg\Coordinate\Dimension($options["width"], $options["height"]), @$options["resizefit"] ? $options["resizefit"] : "inset"));
+            $video->filters()->framerate(new FFMpeg\Coordinate\FrameRate(25), 250);
+            if (!@$options["noaudio"])
+                $video->filters()->synchronize();
+            if (@$options["filters"])
+                foreach($options["filters"] as $filter)
+                    $video->addFilter($filter);
+            if (@$options["noaudio"])
+                $video->addFilter(new VideoOnlyFilter());
+            if (@$options["duration"])
+                $video->addFilter(new DurationFilter($options["duration"]));
+            if (@$options["format"]) {
+                if ($options["format"] == "mp4") {
+                    $format = new X264Baseline();
+                    $format->setKiloBitrate($bitSize);
+                    $format->setAudioKiloBitrate($audioBitrate);
+                } elseif ($options["format"] == "flv") {
+                    $format->setKiloBitrate($bitSize);
+                    $format->setAudioKiloBitrate($audioBitrate);
+                    $format->setExtraParams(array("-f", "flv", "-ar", "44100"));
+                } else
+                    throw new VideoTranscodingException(VideoTranscodingException::TRANSCODE_UNKNOWN_TARGET_FORMAT, $options["format"]);
+            }
+            else
+                $format = new ExtraParamsDefaultVideo();
+            $video->save($format, $target);
+        } catch (Exception $e) {
+            throw new VideoTranscodingException(VideoTranscodingException::TRANSCODE_EXCEPTION, (string)$e);
+        }
+        if (@$options["faststart"] && $options["format"] == "mp4")
+            self::faststart($target);
+        if (@$options["replace"]) {
+            unlink($source);
+            if (!rename($target, $source)) {
+                @unlink($target);
+                throw new VideoTranscodingException(VideoTranscodingException::TRANSCODE_RENAME_FAILED);
+            }
+        } else
+            return $target;
+    }
 
     private static function alternativeRotation($file) {
         $provider = new FFprobeOutputProvider();
@@ -202,7 +205,7 @@ Class FfmpegVideoTranscoding {
             }
         }
     }
-	
+
 	private static function extractAudio($source, $format) {
 		try {
 			$target = tempnam(sys_get_temp_dir(), "") . "." . $format;
@@ -224,9 +227,9 @@ Class FfmpegVideoTranscoding {
 			throw new VideoTranscodingException(VideoTranscodingException::TRANSCODE_EXCEPTION, (string)$e);
 		}
 	}
-	
+
 	private static function transcodeAudioVideoSeparately($source, $options) {
-		$audio = NULL;				
+		$audio = NULL;
 		try {
 			$audio = self::extractAudio($source, "aac");
 		} catch (Exception $e) {
@@ -243,7 +246,7 @@ Class FfmpegVideoTranscoding {
 			if (!@$options["filters"])
 				$options["filters"] = array();
 			$options["filters"][] = new MapAndMergeFilter($audio, 0, 0);
-			$result = self::transcode($video, $options);	
+			$result = self::transcode($video, $options);
 			@unlink($audio);
 			@unlink($video);
 			return $result;
@@ -253,8 +256,38 @@ Class FfmpegVideoTranscoding {
 			throw $e;
 		}
 	}
-	
-	private static function separateAudioVideoTranscodingRequired($source, $options) {
+
+    private static function transcodeAudioVideoSeparately2($source, $options) {
+        $audio = NULL;
+        try {
+            $audio = self::extractAudio($source, "aac");
+        } catch (Exception $e) {
+            return self::transcode($source, $options);
+        }
+        try {
+            $video = self::transcode($source, array(
+                "noaudio" => TRUE,
+                "format" => $options["format"],
+                "rotate" => $options["rotate"],
+                "rotate_add" => $options["rotate_add"]
+            ));
+            unset($options["rotate"]);
+            unset($options["rotate_add"]);
+            if (!@$options["filters"])
+                $options["filters"] = array();
+            $options["filters"][] = new MapAndMergeFilter($audio, 0, 0);
+            $result = self::transcode($video, $options);
+            @unlink($audio);
+            @unlink($video);
+            return $result;
+        } catch (VideoTranscodingException $e) {
+            @unlink($audio);
+            @unlink($video);
+            throw $e;
+        }
+    }
+
+    private static function separateAudioVideoTranscodingRequired($source, $options) {
 		if (strpos($source, ".webm", strlen($source) - strlen(".webm")) !== FALSE) {
 			if (@$options["filters"]) {
 				foreach ($options["filters"] as $filter)
@@ -272,15 +305,15 @@ Class FfmpegVideoTranscoding {
         try {
             return self::transcode($source, $options);
         } catch (Exception $e) {
-            return self::transcodeAudioVideoSeparately($source, $options);
+            return self::transcodeAudioVideoSeparately2($source, $options);
         }
     }
-	
+
 }
 
 
 Class VideoTranscodingException extends Exception {
-	
+
 	const FAST_START_EXEC_FAILED = 1;
 	const FAST_START_RENAME_FAILED = 2;
 	const FAST_START_EXCEPTION = 3;
@@ -288,13 +321,13 @@ Class VideoTranscodingException extends Exception {
 	const TRANSCODE_EXCEPTION = 5;
 	const TRANSCODE_UNKNOWN_TARGET_FORMAT = 6;
 	const QTROTATE_FAILED = 7;
-	
+
 	function __construct($message_id, $data = NULL) {
 		$this->message_id = $message_id;
 		$this->data = $data;
 		parent::__construct($this->formatMessage() . " (" . $message_id . ") - " . $data);
 	}
-	
+
 	function formatMessage() {
 		switch ($this->message_id) {
 			case self::FAST_START_EXEC_FAILED : return "Fast Start Exec Failed";
@@ -306,7 +339,7 @@ Class VideoTranscodingException extends Exception {
 			case self::QTROTATE_FAILED : return "Rotate Exec Failed";
 		}
 	}
-	
+
 }
 
 FfmpegVideoTranscoding::$qtrotate_binary = dirname(__FILE__) . "/vendors/qtrotate.py";

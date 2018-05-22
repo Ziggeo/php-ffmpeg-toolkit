@@ -7,11 +7,11 @@ Class ExtraParamsDefaultVideo extends FFMpeg\Format\Video\DefaultVideo {
     public function getExtraParams() {
         return $this->extra_params;
     }
-	
+
 	public function setExtraParams($value) {
 		$this->extra_params = $value;
 	}
-	
+
     public function getAvailableAudioCodecs() {
         return array();
     }
@@ -19,7 +19,7 @@ Class ExtraParamsDefaultVideo extends FFMpeg\Format\Video\DefaultVideo {
     public function getAvailableVideoCodecs() {
         return array();
     }
-	
+
 	public function supportBFrames() {
         return false;
     }
@@ -31,28 +31,28 @@ Class X264Baseline extends FFMpeg\Format\Video\X264 {
 
     public function getExtraParams() {
        	return array("-profile:v", "baseline", "-f", "mp4", "-pix_fmt", "yuv420p");
-    }	
-	
+    }
+
 }
 
 
 Class MapAndMergeFilter implements FFMpeg\Filters\Video\VideoFilterInterface {
-	
+
 	private $priority;
-	
+
 	private $filename;
-	
+
 	private $mapOriginal;
-	
+
 	private $mapThis;
-	
+
 	public function __construct($filename, $mapOriginal = 0, $mapThis = 1, $priority = 13) {
 		$this->priority = $priority;
 		$this->filename = $filename;
 		$this->mapOriginal = $mapOriginal;
 		$this->mapThis = $mapThis;
 	}
-	
+
     public function getPriority() {
         return $this->priority;
     }
@@ -67,19 +67,19 @@ Class MapAndMergeFilter implements FFMpeg\Filters\Video\VideoFilterInterface {
     		"-map",
     		"1:" . $this->mapThis
     	);
-    }	
+    }
 
 }
 
 
 Class AudioOnlyFilter implements FFMpeg\Filters\Video\VideoFilterInterface {
-	
+
 	private $priority;
-	
+
 	public function __construct($priority = 0) {
 		$this->priority = $priority;
 	}
-	
+
     public function getPriority() {
         return $this->priority;
     }
@@ -89,21 +89,43 @@ Class AudioOnlyFilter implements FFMpeg\Filters\Video\VideoFilterInterface {
     	return array(
     		"-vn"
     	);
-    }	
+    }
+
+}
+
+
+Class VideoOnlyFilter implements FFMpeg\Filters\Video\VideoFilterInterface {
+
+    private $priority;
+
+    public function __construct($priority = 0) {
+        $this->priority = $priority;
+    }
+
+    public function getPriority() {
+        return $this->priority;
+    }
+
+    public function apply(FFMpeg\Media\Video $video, FFMpeg\Format\VideoInterface $format)
+    {
+        return array(
+            "-an"
+        );
+    }
 
 }
 
 
 Class WatermarkFilter implements FFMpeg\Filters\Video\VideoFilterInterface {
-	
+
     private $priority;
-	
+
 	private $filename;
-	
+
 	private $scale_of_video;
-	
+
 	private $positionx;
-	
+
 	private $positiony;
 
     public function __construct($filename, $scale_of_video = 0.25, $positionx = 0.95, $positiony = 0.95, $priority = 0) {
@@ -132,17 +154,17 @@ Class WatermarkFilter implements FFMpeg\Filters\Video\VideoFilterInterface {
                 }
             }
         }
-		
+
 		$image = getimagesize($this->filename);
 		$image_width = $image[0];
 		$image_height = $image[1];
-		
+
 		$scale_width = $image_width;
 		$scale_height = $image_height;
-		
+
 		$max_width = floor($originalWidth * $this->scale_of_video);
 		$max_height = floor($originalHeight * $this->scale_of_video);
-		
+
 		if ($image_width > $max_width || $image_height > $max_height) {
 			if ($image_width * $max_height > $image_height * $max_width) {
 				$scale_width = $max_width;
@@ -152,24 +174,24 @@ Class WatermarkFilter implements FFMpeg\Filters\Video\VideoFilterInterface {
 				$scale_width = round($image_width * $max_height / $image_height);
 			}
 		}
-		
+
 		$posx = floor($this->positionx * ($originalWidth - $scale_width));
 		$posy = floor($this->positiony * ($originalHeight - $scale_height));
-		
+
         $commands = array(
         	"-vf",
         	'movie=' . $this->filename . ',scale=' . $scale_width . ":" . $scale_height . '[wm];[in][wm]overlay=' . $posx . ':' . $posy . '[out]'
 		);
 
         return $commands;
-    }	
+    }
 }
 
 
 Class DurationFilter implements FFMpeg\Filters\Video\VideoFilterInterface {
-	
+
     private $priority;
-	
+
 	private $duration;
 
     public function __construct($duration, $priority = 0) {
@@ -186,7 +208,7 @@ Class DurationFilter implements FFMpeg\Filters\Video\VideoFilterInterface {
     		"-t",
     		$this->duration . ""
 		);
-    }	
+    }
 }
 
 
@@ -216,13 +238,13 @@ Class CropFilter implements FFMpeg\Filters\Video\VideoFilterInterface {
                 }
             }
         }
-        
+
         $cropping = $this->cropping;
         $w = isset($cropping["width"]) ? $cropping["width"] : $originalWidth;
         $h = isset($cropping["height"]) ? $cropping["height"] : $originalHeight;
         $x = isset($cropping["x"]) ? $cropping["x"] : (ceil(($originalWidth - $w) / 2));
         $y = isset($cropping["y"]) ? $cropping["y"] : (ceil(($originalHeight - $h) / 2));
-                
+
 		return array(
 			"-vf",
 			"crop=" . join(":", array($w, $h, $x, $y))
@@ -245,7 +267,7 @@ Class CropRatioFilter implements FFMpeg\Filters\Video\VideoFilterInterface {
 	}
 
 	public function apply(FFMpeg\Media\Video $video, FFMpeg\Format\VideoInterface $format) {
-		
+
 	    $originalWidth = $originalHeight = null;
 
         foreach ($video->getStreams() as $stream) {
@@ -258,22 +280,22 @@ Class CropRatioFilter implements FFMpeg\Filters\Video\VideoFilterInterface {
                 }
             }
         }
-        
+
         $originalRatio = $originalWidth / $originalHeight;
         if ($originalRatio == $this->ratio)
         	return array();
-        
+
         $w = $originalWidth;
         $h = $originalHeight;
-        
+
         if ($originalRatio > $this->ratio)
         	$w = $originalHeight * $this->ratio;
-        else 
+        else
         	$h = $originalWidth / $this->ratio;
-                
+
         $x = ceil(($originalWidth - $w) / 2);
         $y = ceil(($originalHeight - $h) / 2);
-        
+
         return array(
 			"-vf",
 			"crop=" . join(":", array($w, $h, $x, $y))
@@ -376,17 +398,17 @@ Class PadRatioFilter implements FFMpeg\Filters\Video\VideoFilterInterface {
 
 
 Class RotationFilter implements FFMpeg\Filters\Video\VideoFilterInterface {
-	
+
     private $priority;
-	
+
 	private $rotation;
-	
+
 	private $transpose;
 	private $doubleflip;
 
     public function __construct($rotation, $priority = 0) {
         $this->priority = $priority;
-		$this->rotation = $rotation; 
+		$this->rotation = $rotation;
 		$this->transpose = 0;
 		$this->doubleflip = false;
 		if ($this->rotation == 90)
@@ -412,27 +434,27 @@ Class RotationFilter implements FFMpeg\Filters\Video\VideoFilterInterface {
 			$result[] = "hflip,vflip";
 		}
 		$result[] = "-metadata:s:v:0";
-		$result[] = "rotate=0";		
+		$result[] = "rotate=0";
 		return $result;
     }
-	
+
 	public function getTranspose() {
 	}
 }
 
 
 Class RotationFrameFilter implements FFMpeg\Filters\Frame\FrameFilterInterface {
-	
+
     private $priority;
-	
+
 	private $rotation;
-	
+
 	private $transpose;
 	private $doubleflip;
 
     public function __construct($rotation, $priority = 0) {
         $this->priority = $priority;
-		$this->rotation = $rotation; 
+		$this->rotation = $rotation;
 		$this->transpose = 0;
 		$this->doubleflip = false;
 		if ($this->rotation == 90)
@@ -458,10 +480,10 @@ Class RotationFrameFilter implements FFMpeg\Filters\Frame\FrameFilterInterface {
 			$result[] = "hflip,vflip";
 		}
 		$result[] = "-metadata:s:v:0";
-		$result[] = "rotate=0";		
+		$result[] = "rotate=0";
 		return $result;
     }
-	
+
 	public function getTranspose() {
 	}
 }
@@ -528,7 +550,7 @@ Class RotationResizeFilter implements FFMpeg\Filters\Video\VideoFilterInterface
     {
         return $this->forceStandards;
     }
-	
+
     public function apply(FFMpeg\Media\Video $video, FFMpeg\Format\VideoInterface $format)
     {
         $dimensions = null;
@@ -591,7 +613,7 @@ Class RotationResizeFilter implements FFMpeg\Filters\Video\VideoFilterInterface
 
         return new FFMpeg\Coordinate\Dimension($width, $height);
     }
-	
+
 }
 
 
