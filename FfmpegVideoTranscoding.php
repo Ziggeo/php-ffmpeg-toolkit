@@ -265,12 +265,16 @@ Class FfmpegVideoTranscoding {
 		}
 		return FALSE;
 	}
-	
-	public static function transcodeGracefully($source, $options) {
-		return self::separateAudioVideoTranscodingRequired($source, $options) ?
-			self::transcodeAudioVideoSeparately($source, $options) :
-			self::transcode($source, $options);
-	}
+
+    public static function transcodeGracefully($source, $options) {
+        if (self::separateAudioVideoTranscodingRequired($source, $options))
+            return self::transcodeAudioVideoSeparately($source, $options);
+        try {
+            return self::transcode($source, $options);
+        } catch (Exception $e) {
+            return self::transcodeAudioVideoSeparately($source, $options);
+        }
+    }
 	
 }
 
