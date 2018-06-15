@@ -300,10 +300,11 @@ Class FfmpegVideoTranscoding {
 	}
 
     public static function transcodeGracefully($source, $options) {
-        if (self::separateAudioVideoTranscodingRequired($source, $options))
-            return self::transcodeAudioVideoSeparately($source, $options);
         try {
-            return self::transcode($source, $options);
+            if (self::separateAudioVideoTranscodingRequired($source, $options))
+                return self::transcodeAudioVideoSeparately($source, $options);
+            else
+                return self::transcode($source, $options);
         } catch (Exception $e) {
             return self::transcodeAudioVideoSeparately2($source, $options);
         }
