@@ -86,14 +86,15 @@ Class FfmpegVideoTranscoding {
                 $config["ffprobe.binaries"] = array(self::$ffprobe_binary);
             $ffmpeg = FFMpeg\FFMpeg::create($config);
             $rotation = @$options["rotate_add"] ? $options["rotate_add"] : 0;
-            if (@$options["rotate"]) {
-                try {
-                    $rotation += self::getRotation($source);
-                } catch (VideoTranscodingException $e) {
-                    // Ignore it and assume rotation 0
-                }
-            }
             $autorotate = @$options["autorotate"] ? $options["autorotate"] : FALSE;
+            $read_rotate = $rotation;
+            try {
+                $read_rotate += self::getRotation($source);
+            } catch (VideoTranscodingException $e) {
+                // Ignore it and assume rotation 0
+            }
+            if (!$autorotate && @$options["rotate"])
+                $rotation = $read_rotate;
             $video = $ffmpeg->open($source);
 
             $bitSize = 500;
@@ -124,10 +125,14 @@ Class FfmpegVideoTranscoding {
             } catch (Exception $e) {
 
             }
-
-            if (@$rotation && !@$autorotate)
+            if ($read_rotate == 90 || $read_rotate == 270) {
+                $temp = $originalWidth;
+                $originalWidth = $originalHeight;
+                $originalHeight = $temp;
+            }
+            if (@$rotation)
                 $video->addFilter(new RotationFilter($rotation));
-            if (@$originalWidth && @$originalHeight && !@$options["width"] && !@$options["height"] && ($originalWidth % 2 == 1 || $originalHeight % 2 == 1)) {
+            if (@$originalWidth && @$originalHeight && !@$options["width"] && !@$options["height"] /*&& ($originalWidth % 2 == 1 || $originalHeight % 2 == 1)*/) {
                 $options["width"] = $originalWidth;
                 $options["height"] = $originalHeight;
                 if ($options["width"] % 2 == 1)
@@ -238,10 +243,12 @@ Class FfmpegVideoTranscoding {
             $video = self::transcode($source, array(
                 "format" => $options["format"],
                 "rotate" => $options["rotate"],
+                "autorotate" => $options["autorotate"],
                 "rotate_add" => $options["rotate_add"]
             ));
             unset($options["rotate"]);
             unset($options["rotate_add"]);
+            unset($options["autorotate"]);
             if (!@$options["filters"])
                 $options["filters"] = array();
             $options["filters"][] = new MapAndMergeFilter($audio, 0, 0);
@@ -268,10 +275,12 @@ Class FfmpegVideoTranscoding {
                 "noaudio" => TRUE,
                 "format" => $options["format"],
                 "rotate" => $options["rotate"],
+                "autorotate" => $options["autorotate"],
                 "rotate_add" => $options["rotate_add"]
             ));
             unset($options["rotate"]);
             unset($options["rotate_add"]);
+            unset($options["autorotate"]);
             if (!@$options["filters"])
                 $options["filters"] = array();
             $options["filters"][] = new MapAndMergeFilter($audio, 0, 0);
