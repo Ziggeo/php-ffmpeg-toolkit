@@ -210,7 +210,7 @@ Class FfmpegVideoTranscoding {
         }
     }
 
-    private static function extractAudio($source, $format) {
+    public static function extractAudio($source, $format) {
         try {
             $target = tempnam(sys_get_temp_dir(), "") . "." . $format;
             touch($target);
@@ -232,7 +232,7 @@ Class FfmpegVideoTranscoding {
         }
     }
 
-    private static function transcodeAudioVideoSeparately($source, $options) {
+    public static function transcodeAudioVideoSeparately($source, $options) {
         $audio = NULL;
         try {
             $audio = self::extractAudio($source, "aac");
@@ -263,7 +263,7 @@ Class FfmpegVideoTranscoding {
         }
     }
 
-    private static function transcodeAudioVideoSeparately2($source, $options) {
+    public static function transcodeAudioVideoSeparately2($source, $options) {
         $audio = NULL;
         try {
             $audio = self::extractAudio($source, "aac");
@@ -295,7 +295,7 @@ Class FfmpegVideoTranscoding {
         }
     }
 
-    private static function separateAudioVideoTranscodingRequired($source, $options) {
+    public static function separateAudioVideoTranscodingRequired($source, $options) {
         if (strpos($source, ".webm", strlen($source) - strlen(".webm")) !== FALSE) {
             if (@$options["filters"]) {
                 foreach ($options["filters"] as $filter)
