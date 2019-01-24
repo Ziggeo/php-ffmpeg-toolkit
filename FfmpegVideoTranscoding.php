@@ -158,6 +158,7 @@ Class FfmpegVideoTranscoding {
                     $format->setKiloBitrate($bitSize);
                     $format->setAudioKiloBitrate($audioBitrate);
                 } elseif ($options["format"] == "flv") {
+                    $format = new ExtraParamsDefaultVideo();
                     $format->setKiloBitrate($bitSize);
                     $format->setAudioKiloBitrate($audioBitrate);
                     $format->setExtraParams(array("-f", "flv", "-ar", "44100"));
