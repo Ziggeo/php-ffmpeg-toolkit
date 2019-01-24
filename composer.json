@@ -4,7 +4,7 @@
 	"version" : "0.0.14",
 	"license" : "Apache-2.0",
 	"require" : {
-		"php" : ">=5.3.0",
+		"php" : ">=7.1.0",
 		"codescale/ffmpeg-php" : "2.*",
 		"php-ffmpeg/php-ffmpeg" : "0.11.0"
 	}
