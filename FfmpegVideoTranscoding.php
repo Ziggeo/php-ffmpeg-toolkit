@@ -143,7 +143,7 @@ Class FfmpegVideoTranscoding {
             if (@$options["width"] && @$options["height"])
                 $video->addFilter(new RotationResizeFilter($rotation, new FFMpeg\Coordinate\Dimension($options["width"], $options["height"]), @$options["resizefit"] ? $options["resizefit"] : "inset"));
             $video->filters()->framerate(new FFMpeg\Coordinate\FrameRate(25), 250);
-            if (!@$options["noaudio"])
+            if (!@$options["noaudio"] && !@$options["nosync"])
                 $video->filters()->synchronize();
             if (@$options["filters"])
                 foreach ($options["filters"] as $filter)
