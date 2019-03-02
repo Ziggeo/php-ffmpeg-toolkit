@@ -20,7 +20,7 @@ $TMPFILES = array(
 );
 
 
-class FfmpegRotationTest extends PHPUnit_Framework_TestCase {
+class FfmpegRotationTest extends PHPUnit\Framework\TestCase {
 
     public function testReadRotation() {
         global $ASSETS, $SETTINGS;
