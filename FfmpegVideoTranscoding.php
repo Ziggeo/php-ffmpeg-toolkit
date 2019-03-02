@@ -13,6 +13,7 @@ Class FfmpegVideoTranscoding {
 
     public static $ffmpeg_binary = NULL;
     public static $ffprobe_binary = NULL;
+    public static $aac_encoder = NULL;
 
     /* Returns target file name
      *
@@ -154,7 +155,7 @@ Class FfmpegVideoTranscoding {
                 $video->addFilter(new DurationFilter($options["duration"]));
             if (@$options["format"]) {
                 if ($options["format"] == "mp4") {
-                    $format = new X264Baseline();
+                    $format = @static::$aac_encoder ? new X264Baseline(static::$aac_encoder) : new X264Baseline();
                     $format->setKiloBitrate($bitSize);
                     $format->setAudioKiloBitrate($audioBitrate);
                 } elseif ($options["format"] == "flv") {
