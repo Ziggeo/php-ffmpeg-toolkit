@@ -151,7 +151,9 @@ Class FfmpegVideoTranscoding {
                     $video->addFilter($filter);
             if (@$options["noaudio"])
                 $video->addFilter(new VideoOnlyFilter());
-            if (@$options["duration"])
+            if (@$options["ss"] || @$options["to"]) {
+                $video->addFilter(new TrimFilter(@$options["ss"], @$options["to"]));
+            } else if (@$options["duration"])
                 $video->addFilter(new DurationFilter($options["duration"]));
             if (@$options["format"]) {
                 if ($options["format"] == "mp4") {

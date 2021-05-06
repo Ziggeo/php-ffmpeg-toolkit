@@ -211,6 +211,42 @@ Class DurationFilter implements FFMpeg\Filters\Video\VideoFilterInterface {
     }
 }
 
+Class TrimFilter implements FFmpeg\Filters\Video\VideoFilterInterface {
+
+	private $start;
+	private $end;
+	private $priority;
+
+	public function __construct($start, $end, $priority = 0) {
+		$this->start = $start ? $start : 0;
+		$this->end = $end;
+		$this->priority = $priority;
+	}
+
+	public function getPriority() {
+		return $this->priority;
+	}
+
+	public function getStart() {
+		return $this->start;
+	}
+
+	public function getEnd() {
+		return $this->end;
+	}
+
+	public function apply(FFMpeg\Media\Video $video, FFMpeg\Format\VideoInterface $format) {
+		$commands = array("-ss", (string) $this->start);
+
+		if ($this->end) {
+			$commands[] = "-to";
+			$commands[] = (string) $this->end;
+		}
+
+		return $commands;
+	}
+}
+
 
 Class CropFilter implements FFMpeg\Filters\Video\VideoFilterInterface {
 
