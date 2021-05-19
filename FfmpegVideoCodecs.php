@@ -21,6 +21,12 @@ Class FfmpegVideoCodecs {
 			return "mov";
         if (strpos(strtolower($filename), ".m4v") !== FALSE)
             return "m4v";
+		if (strpos(strtolower($filename), ".mkv") !== FALSE)
+			return "mkv";
+		if (strpos(strtolower($filename), ".avi") !== FALSE)
+			return "avi";
+		if (strpos(strtolower($filename), ".mp4") !== FALSE && strpos($codec, "av1") !== FALSE)
+			return "mp4-av1";
 		if (strpos($codec, "flv") !== FALSE)
 			return "flv";
 		if (strpos($codec, "h264") !== FALSE)
