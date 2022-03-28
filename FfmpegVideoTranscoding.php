@@ -68,7 +68,7 @@ Class FfmpegVideoTranscoding {
      *  - bool rotate (optional, default false),
      *  - bool autorotate
      *  - int rotate_add (optional)
-     *
+     *  - bool log (optional)
      */
     public static function transcode($source, $options) {
         $target = @$options["target"] ? $options["target"] : tempnam(sys_get_temp_dir(), "");
@@ -172,6 +172,9 @@ Class FfmpegVideoTranscoding {
             $video->save($format, $target);
         } catch (Exception $e) {
             throw new VideoTranscodingException(VideoTranscodingException::TRANSCODE_EXCEPTION, (string)$e);
+        } finally {
+						if (@$options["log"])
+								print_r(implode(PHP_EOL, $video->getFinalCommand($format, $target)) . PHP_EOL);
         }
         if (@$options["faststart"] && $options["format"] == "mp4")
             self::faststart($target);
@@ -214,7 +217,7 @@ Class FfmpegVideoTranscoding {
         }
     }
 
-    public static function extractAudio($source, $format) {
+    public static function extractAudio($source, $format, $options = array()) {
         try {
             $target = tempnam(sys_get_temp_dir(), "") . "." . $format;
             touch($target);
@@ -233,13 +236,16 @@ Class FfmpegVideoTranscoding {
             return $target;
         } catch (Exception $e) {
             throw new VideoTranscodingException(VideoTranscodingException::TRANSCODE_EXCEPTION, (string)$e);
+        } finally {
+	          if (@$options["log"])
+		            print_r(implode(PHP_EOL, $video->getFinalCommand($format, $target)) . PHP_EOL);
         }
     }
 
     public static function transcodeAudioVideoSeparately($source, $options) {
         $audio = NULL;
         try {
-            $audio = self::extractAudio($source, "aac");
+            $audio = self::extractAudio($source, "aac", $options);
         } catch (Exception $e) {
             return self::transcode($source, $options);
         }
@@ -248,7 +254,8 @@ Class FfmpegVideoTranscoding {
                 "format" => $options["format"],
                 "rotate" => $options["rotate"],
                 "autorotate" => $options["autorotate"],
-                "rotate_add" => $options["rotate_add"]
+                "rotate_add" => $options["rotate_add"],
+	              "log" => @$options["log"]
             ));
             unset($options["rotate"]);
             unset($options["rotate_add"]);
@@ -270,7 +277,7 @@ Class FfmpegVideoTranscoding {
     public static function transcodeAudioVideoSeparately2($source, $options) {
         $audio = NULL;
         try {
-            $audio = self::extractAudio($source, "aac");
+            $audio = self::extractAudio($source, "aac", $options);
         } catch (Exception $e) {
             return self::transcode($source, $options);
         }
@@ -280,7 +287,8 @@ Class FfmpegVideoTranscoding {
                 "format" => $options["format"],
                 "rotate" => $options["rotate"],
                 "autorotate" => $options["autorotate"],
-                "rotate_add" => $options["rotate_add"]
+                "rotate_add" => $options["rotate_add"],
+	              "log" => @$options["log"]
             ));
             unset($options["rotate"]);
             unset($options["rotate_add"]);
