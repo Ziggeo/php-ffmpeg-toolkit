@@ -16,7 +16,7 @@ Class FfmpegVideoFile {
         $ffmpeg_binary = "ffmpeg";
         if (FfmpegVideoTranscoding::$ffmpeg_binary)
             $ffmpeg_binary = FfmpegVideoTranscoding::$ffmpeg_binary;
-        $this->movie = new FFmpegMovie($name, NULL, $ffmpeg_binary);
+        $this->movie = new FFmpegMovie($name, new FFmpegCustomOutputProvider($ffmpeg_binary), $ffmpeg_binary);
         $config = array();
         if (FfmpegVideoTranscoding::$ffmpeg_binary)
             $config["ffmpeg.binaries"] = array(FfmpegVideoTranscoding::$ffmpeg_binary);
