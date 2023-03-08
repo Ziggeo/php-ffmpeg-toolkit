@@ -173,7 +173,7 @@ Class FfmpegVideoTranscoding {
         } catch (Exception $e) {
             throw new VideoTranscodingException(VideoTranscodingException::TRANSCODE_EXCEPTION, (string)$e);
         } finally {
-						if (@$options["log"])
+						if (@$options["log"] && @$video)
 								print_r(implode(PHP_EOL, $video->getFinalCommand($format, $target)) . PHP_EOL);
         }
         if (@$options["faststart"] && $options["format"] == "mp4")
@@ -237,7 +237,7 @@ Class FfmpegVideoTranscoding {
         } catch (Exception $e) {
             throw new VideoTranscodingException(VideoTranscodingException::TRANSCODE_EXCEPTION, (string)$e);
         } finally {
-	          if (@$options["log"])
+	          if (@$options["log"] && @$video)
 		            print_r(implode(PHP_EOL, $video->getFinalCommand($format, $target)) . PHP_EOL);
         }
     }
