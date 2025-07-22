@@ -4,9 +4,9 @@
 	"version" : "0.0.20",
 	"license" : "Apache-2.0",
 	"require" : {
-		"php" : ">=5.5.0",
-		"codescale/ffmpeg-php" : "2.*",
-		"php-ffmpeg/php-ffmpeg" : "0.11.0"
+		"php" : ">=7.4",
+		"codescale/ffmpeg-php" : "3.*",
+		"php-ffmpeg/php-ffmpeg" : "0.16"
 	},
 	"require-dev": {
 		"phpunit/phpunit": "^9.5"

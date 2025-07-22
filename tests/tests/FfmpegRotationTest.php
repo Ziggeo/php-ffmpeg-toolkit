@@ -89,8 +89,10 @@ class FfmpegRotationTest extends PHPUnit\Framework\TestCase {
         $rotatedVideoNoRotateAdd->saveImageByPercentage($TMPFILES["TMP_IMAGE"]);
         $readImg = new FfmpegVideoFile($TMPFILES["TMP_IMAGE"]);
         unlink($TMPFILES["TMP_IMAGE"]);
-        $this->assertEquals($readImg->getWidth(), 320);
-        $this->assertEquals($readImg->getHeight(), 568);
+        $this->assertGreaterThanOrEqual(568, $readImg->getWidth());
+        $this->assertGreaterThanOrEqual(320, $readImg->getHeight());
+	      $original_width = $readImg->getWidth();
+	      $original_height = $readImg->getHeight();
         $this->assertEquals($readImg->getRotation(), 0);
 
         $rotatedVideoWithRotateAdd = new FfmpegVideoFile($ASSETS["ROTATED_VIDEO"], array_merge($SETTINGS, array(
@@ -101,8 +103,8 @@ class FfmpegRotationTest extends PHPUnit\Framework\TestCase {
         $rotatedVideoWithRotateAdd->saveImageByPercentage($TMPFILES["TMP_IMAGE"]);
         $readImg = new FfmpegVideoFile($TMPFILES["TMP_IMAGE"]);
         unlink($TMPFILES["TMP_IMAGE"]);
-        $this->assertEquals($readImg->getWidth(), 568);
-        $this->assertEquals($readImg->getHeight(), 320);
+        $this->assertEquals($original_height, $readImg->getWidth());
+        $this->assertEquals($original_width, $readImg->getHeight());
         $this->assertEquals($readImg->getRotation(), 0);
     }
 

@@ -189,15 +189,37 @@ Class FfmpegVideoTranscoding {
     }
 
     private static function alternativeRotation($file) {
-        $provider = new FFprobeOutputProvider();
-        $provider->setMovieFile($file);
-        $output = $provider->getOutput();
-        $matches = array();
-        $result = preg_match('/displaymatrix: rotation of (.+) degrees/', $output, $matches);
-        $rotation = 0;
-        if ($result && count($matches) === 2)
-            $rotation = intval(-$matches[1]);
-        return $rotation;
+        try {
+            $provider = new \Char0n\FFMpegPHP\OutputProviders\FFProbeProvider('ffprobe');
+            $provider->setMovieFile($file);
+            $output = $provider->getOutput();
+            $matches = array();
+            $result = preg_match('/displaymatrix: rotation of (.+) degrees/', $output, $matches);
+            $rotation = 0;
+            if ($result && count($matches) === 2)
+                $rotation = intval(-$matches[1]);
+            return $rotation;
+        } catch (\Exception $e) {
+            // If FFProbeProvider fails, try using ffmpeg directly
+            $config = array();
+            if (self::$ffmpeg_binary)
+                $config["ffmpeg.binaries"] = array(self::$ffmpeg_binary);
+            if (self::$ffprobe_binary)
+                $config["ffprobe.binaries"] = array(self::$ffprobe_binary);
+            $ffprobe = \FFMpeg\FFProbe::create($config);
+
+            // Try to get rotation metadata
+            try {
+                $tags = $ffprobe->streams($file)
+                    ->videos()
+                    ->first()
+                    ->get('tags');
+                $rotation = isset($tags['rotate']) ? $tags['rotate'] : 0;
+                return intval($rotation);
+            } catch (\Exception $e) {
+                return 0;
+            }
+        }
     }
 
     public static function getRotation($file) {

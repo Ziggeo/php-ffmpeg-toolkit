@@ -3,6 +3,8 @@
 require_once(dirname(__FILE__) . "/FfmpegVideoCodecs.php");
 require_once(dirname(__FILE__) . "/FfmpegVideoTranscoding.php");
 
+use Char0n\FFMpegPHP\Adapters\FFmpegMovie;
+
 Class FfmpegVideoFile {
 
     private $filename;
@@ -13,10 +15,7 @@ Class FfmpegVideoFile {
 
     function __construct($name, $options = array()) {
         $this->filename = $name;
-        $ffmpeg_binary = "ffmpeg";
-        if (FfmpegVideoTranscoding::$ffmpeg_binary)
-            $ffmpeg_binary = FfmpegVideoTranscoding::$ffmpeg_binary;
-        $this->movie = new FFmpegMovie($name, new FFmpegCustomOutputProvider($ffmpeg_binary), $ffmpeg_binary);
+        $this->movie = new FFmpegMovie($name);
         $config = array();
         if (FfmpegVideoTranscoding::$ffmpeg_binary)
             $config["ffmpeg.binaries"] = array(FfmpegVideoTranscoding::$ffmpeg_binary);
