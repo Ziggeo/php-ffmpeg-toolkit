@@ -68,7 +68,7 @@ def get_index(datastream):
     top_level_atoms = set([item[0] for item in index])
     for key in ["ftyp", "moov", "mdat"]:
         if key not in top_level_atoms:
-            print "%s atom not found, is this a valid MOV/MP4 file?" % key
+            print("%s atom not found, is this a valid MOV/MP4 file?" % key)
             raise SystemExit(1)
     
     return index
@@ -90,7 +90,7 @@ def find_atoms(size, datastream):
         try:
             atom_size, atom_type = read_atom(datastream)
         except:
-            print "Error reading next atom!"
+            print("Error reading next atom!")
             raise SystemExit(1)
         
         if atom_type in ["trak"]:
@@ -122,7 +122,7 @@ def get_set_rotation(infilename, set_degrees=None):
             datastream.seek(pos + 8)
             break
     else:
-        print "Couldn't find moov!"
+        print("Couldn't find moov!")
         raise SystemExit(1)
     
     degrees = set()
@@ -143,7 +143,7 @@ def get_set_rotation(infilename, set_degrees=None):
             elif atom_type == "tkhd":
                 datastream.read(20)
         else:
-            print "Unknown %s version: %d!" % (atom_type, version)
+            print("Unknown %s version: %d!" % (atom_type, version))
             raise SystemExit(1)
         
         datastream.read(16)
@@ -205,9 +205,9 @@ if __name__ == "__main__":
             if deg == -1:
                 deg = 0
         
-            print int(deg)
+            print(int(deg))
             
-    except Exception, e:
-        print e
+    except Exception as e:
+        print(e)
         raise SystemExit(1)
 

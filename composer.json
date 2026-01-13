@@ -1,14 +1,14 @@
 {
 	"name" : "ziggeo/php-ffmpeg-toolkit",
 	"description" : "A php library for running ffmpeg.",
-	"version" : "0.0.22",
+	"version" : "0.0.23",
 	"license" : "Apache-2.0",
 	"require" : {
-		"php" : ">=7.1.0",
+		"php" : ">=8.1.0",
 		"codescale/ffmpeg-php" : "2.*",
-		"php-ffmpeg/php-ffmpeg" : "0.11.0"
+		"php-ffmpeg/php-ffmpeg" : "^1.0"
 	},
 	"require-dev": {
-		"phpunit/phpunit": "^9.5"
+		"phpunit/phpunit": "^10.0"
 	}
 }
